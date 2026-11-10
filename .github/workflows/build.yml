@@ -1,0 +1,94 @@
+name: Build MBStudio91 Visuals
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  mac:
+    name: macOS (universal: Intel + Apple Silicon)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -B build -G Xcode -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+      - name: Build
+        run: cmake --build build --config Release --parallel 3
+      - name: Ad-hoc codesign
+        run: |
+          cd "build/MBStudio91Visuals_artefacts/Release"
+          for b in "VST3/MBStudio91 Visuals.vst3" "AU/MBStudio91 Visuals.component" "Standalone/MBStudio91 Visuals.app"; do
+            codesign --force --deep --sign - "$b"
+            codesign --verify --verbose=2 "$b"
+          done
+      - name: Package
+        run: |
+          cd "build/MBStudio91Visuals_artefacts/Release"
+          ditto -c -k --keepParent "VST3/MBStudio91 Visuals.vst3" "MBStudio91-Visuals-macOS-VST3.zip"
+          ditto -c -k --keepParent "AU/MBStudio91 Visuals.component" "MBStudio91-Visuals-macOS-AU.zip"
+          ditto -c -k --keepParent "Standalone/MBStudio91 Visuals.app" "MBStudio91-Visuals-macOS-Standalone.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MBStudio91-Visuals-macOS
+          path: build/MBStudio91Visuals_artefacts/Release/*.zip
+
+  windows:
+    name: Windows (x64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -B build -A x64 -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release --parallel 3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MBStudio91-Visuals-Windows
+          path: |
+            build/MBStudio91Visuals_artefacts/Release/VST3/
+            build/MBStudio91Visuals_artefacts/Release/Standalone/
+
+  linux:
+    name: Linux (x64)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dipendenze
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev libxcomposite-dev libfreetype6-dev libfontconfig1-dev libgl1-mesa-dev libglu1-mesa-dev
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --parallel 3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MBStudio91-Visuals-Linux
+          path: |
+            build/MBStudio91Visuals_artefacts/Release/VST3/
+            build/MBStudio91Visuals_artefacts/Release/Standalone/
+
+  release:
+    name: Release (solo per i tag v*)
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [mac, windows, linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Zip Windows e Linux
+        run: |
+          cd dist
+          (cd MBStudio91-Visuals-Windows && zip -r ../MBStudio91-Visuals-Windows.zip .)
+          (cd MBStudio91-Visuals-Linux && zip -r ../MBStudio91-Visuals-Linux.zip .)
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/MBStudio91-Visuals-macOS/*.zip
+            dist/MBStudio91-Visuals-Windows.zip
+            dist/MBStudio91-Visuals-Linux.zip
