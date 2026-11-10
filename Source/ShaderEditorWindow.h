@@ -15,6 +15,5 @@ public:
 private:
     class Content;
     void timerCallback() override;
-    MBVisualsProcessor& proc;
     Content* content = nullptr;
 };

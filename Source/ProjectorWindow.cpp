@@ -8,7 +8,7 @@ ProjectorWindow::ProjectorWindow (StageComponent& s, int displayIndex, std::func
     setDropShadowEnabled (false);
     const auto& displays = juce::Desktop::getInstance().getDisplays();
     auto* d = (display >= 0 && display < displays.displays.size()) ? &displays.displays.getReference (display) : displays.getPrimaryDisplay();
-    const auto area = d != nullptr ? d->totalArea : juce::Rectangle<int> (0, 0, 1280, 720);
+    const auto area = d != nullptr ? d->logicalBounds.toNearestInt() : juce::Rectangle<int> (0, 0, 1280, 720);
     setBounds (area);
     addAndMakeVisible (stage);
     stage.setBounds (getLocalBounds());

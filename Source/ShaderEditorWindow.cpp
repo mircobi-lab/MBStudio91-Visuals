@@ -103,7 +103,7 @@ public:
 };
 
 ShaderEditorWindow::ShaderEditorWindow (MBVisualsProcessor& p)
-    : juce::DocumentWindow ("MBStudio91 Visuals - Editor shader", juce::Colour (0xff0b0d12), juce::DocumentWindow::closeButton | juce::DocumentWindow::minimiseButton), proc (p)
+    : juce::DocumentWindow ("MBStudio91 Visuals - Editor shader", juce::Colour (0xff0b0d12), juce::DocumentWindow::closeButton | juce::DocumentWindow::minimiseButton)
 {
     content = new Content (p);
     setContentOwned (content, true);

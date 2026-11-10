@@ -70,7 +70,7 @@ void MBVisualsProcessor::handleMidi (const juce::MidiBuffer& midi)
             if (target.isNotEmpty())
                 if (auto* p = apvts.getParameter (target))
                 {
-                    const float v = m.getControllerValue() / 127.f;
+                    const float v = (float) m.getControllerValue() / 127.f;
                     if (dynamic_cast<juce::AudioParameterBool*> (p) != nullptr) p->setValueNotifyingHost (v > .5f ? 1.f : 0.f);
                     else p->setValueNotifyingHost (v);
                 }

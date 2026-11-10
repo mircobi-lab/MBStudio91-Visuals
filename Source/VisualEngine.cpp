@@ -151,7 +151,7 @@ const VisualEngine::Frame& VisualEngine::update (double now)
             if (! dead) bpt = SPIN_DIV[juce::jlimit (0, 6, (int) std::ceil (std::abs (sv) * 7) - 1)];
             const double dir = sv > 0 ? 1 : -1, key = bpt * dir;
             const double lock = bpt > 0 ? dir * TAU * fr.vb / bpt : 0;
-            if (! S.hasKey || key != S.key) { S.off = S.ang - lock; S.key = key; S.hasKey = true; }
+            if (! S.hasKey || std::abs (key - S.key) > 1e-9) { S.off = S.ang - lock; S.key = key; S.hasKey = true; }
             S.ang = lock + S.off;
         }
         else
@@ -209,14 +209,14 @@ void VisualEngine::analyse (double t)
             const float n = juce::jmin (1.f, raw[k] / peaks[k]);
             B[k] += (n - B[k]) * (n > B[k] ? .6f : .15f);
         }
-        if (specMap.size() != audioW || specMapHz != binHz)
+        if ((int) specMap.size() != audioW || std::abs (specMapHz - binHz) > 1e-9)
         {
             specMap.resize (audioW); specMapHz = binHz;
             for (int i = 0; i < audioW; ++i) specMap[(size_t) i] = (float) juce::jmin ((double) (fftSize / 2 - 2), 40.0 * std::pow (16000.0 / 40.0, i / (audioW - 1.0)) / binHz);
         }
         for (int i = 0; i < audioW; ++i)
         {
-            const float x = specMap[(size_t) i]; const int k = (int) x; const float frac = x - k;
+            const float x = specMap[(size_t) i]; const int k = (int) x; const float frac = x - (float) k;
             tex[(size_t) i] = (juce::uint8) (freqByte[(size_t) k] * (1 - frac) + freqByte[(size_t) (k + 1)] * frac);
         }
         // forma d'onda con trigger sul fronte di salita (isteresi)
@@ -305,7 +305,7 @@ VisualEngine::Estimate VisualEngine::estimate() const
     int k = 0; double sum = 0; for (int i = 0; i < (int) H.size(); ++i) { sum += H[(size_t) i]; if (H[(size_t) i] > H[(size_t) k]) k = i; }
     if (sum <= 0 || H[(size_t) k] / sum < .12) return {};
     const double a = k > 0 ? H[(size_t) (k - 1)] : 0, c = k + 1 < (int) H.size() ? H[(size_t) (k + 1)] : 0, den = a - 2 * H[(size_t) k] + c;
-    const double delta = den != 0 ? .5 * (a - c) / den : 0;
+    const double delta = std::abs (den) > 1e-12 ? .5 * (a - c) / den : 0;
     return refine (lo + k + juce::jlimit (-.5, .5, delta));
 }
 

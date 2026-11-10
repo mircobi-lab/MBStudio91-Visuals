@@ -7,7 +7,7 @@ static constexpr int TW = 192, TH = 108;
 Renderer::Renderer (juce::AudioProcessorValueTreeState& s, VisualEngine& e) : apvts (s), engine (e)
 {
     ctx.setRenderer (this);
-    ctx.setOpenGLVersionRequired (juce::OpenGLContext::openGL3_2);
+    ctx.setPreferredVersion (juce::OpenGLVersion (3, 2));
     ctx.setComponentPaintingEnabled (false);
     ctx.setContinuousRepainting (true);
     ctx.setSwapInterval (1);
@@ -143,15 +143,17 @@ void Renderer::openGLContextClosing()
     freeFbo (mixFb[0]); freeFbo (mixFb[1]); freeFbo (pixFb); freeFbo (thumbFbo);
     GLuint ts[4] = { audioTex, histTex, auxTex, blackTex }; glDeleteTextures (4, ts);
     audioTex = histTex = auxTex = blackTex = 0;
-    if (vs) glDeleteShader (vs); vs = 0;
-    if (vao) glDeleteVertexArrays (1, &vao); vao = 0;
+    if (vs) glDeleteShader (vs);
+    vs = 0;
+    if (vao) glDeleteVertexArrays (1, &vao);
+    vao = 0;
 }
 
 void Renderer::ensureSizes()
 {
     const int w = outW.load(), h = outH.load();
     const float q = engine.qualityScale();
-    const int dw = juce::jmax (64, juce::roundToInt (w * q)), dh = juce::jmax (36, juce::roundToInt (h * q));
+    const int dw = juce::jmax (64, juce::roundToInt ((float) w * q)), dh = juce::jmax (36, juce::roundToInt ((float) h * q));
     const int px = juce::jlimit (1, 8, (int) paramF (ids::pixel));
     const int pw = juce::jmax (16, w / px), ph = juce::jmax (9, h / px);
     if (w != resW || h != resH)

@@ -43,7 +43,7 @@ void MBLookAndFeel::drawLinearSlider (juce::Graphics& g, int x, int y, int w, in
     const auto track = s.findColour (juce::Slider::trackColourId);
     if (style == juce::Slider::LinearHorizontal || style == juce::Slider::LinearBar)
     {
-        const float cy = y + h * .5f;
+        const float cy = (float) y + (float) h * .5f;
         g.setColour (kLine); g.fillRoundedRectangle ((float) x, cy - 2, (float) w, 4.f, 2.f);
         const double mn = s.getMinimum(), mx = s.getMaximum();
         const bool bipolar = mn < 0 && mx > 0;
@@ -54,9 +54,9 @@ void MBLookAndFeel::drawLinearSlider (juce::Graphics& g, int x, int y, int w, in
     }
     else
     {
-        const float cx = x + w * .5f;
+        const float cx = (float) x + (float) w * .5f;
         g.setColour (kLine); g.fillRoundedRectangle (cx - 2, (float) y, 4.f, (float) h, 2.f);
-        g.setColour (track); g.fillRoundedRectangle (cx - 2, pos, 4.f, y + h - pos, 2.f);
+        g.setColour (track); g.fillRoundedRectangle (cx - 2, pos, 4.f, (float) (y + h) - pos, 2.f);
         g.setColour (s.findColour (juce::Slider::thumbColourId)); g.fillEllipse (cx - 6, pos - 6, 12, 12);
     }
 }
@@ -297,7 +297,7 @@ void MBVisualsEditor::refreshDisplays()
     displayBox.clear (juce::dontSendNotification);
     const auto& ds = juce::Desktop::getInstance().getDisplays().displays;
     for (int i = 0; i < ds.size(); ++i)
-        displayBox.addItem ("Schermo " + juce::String (i + 1) + (ds[i].isMain ? " (principale)" : "") + " " + juce::String (ds[i].totalArea.getWidth()) + "x" + juce::String (ds[i].totalArea.getHeight()), i + 1);
+        displayBox.addItem ("Schermo " + juce::String (i + 1) + (ds[i].isMain ? " (principale)" : "") + " " + juce::String ((int) ds[i].logicalBounds.getWidth()) + "x" + juce::String ((int) ds[i].logicalBounds.getHeight()), i + 1);
     const int want = proc.projectorDisplay() >= 0 ? proc.projectorDisplay() : (ds.size() > 1 ? 1 : 0);
     displayBox.setSelectedId (juce::jlimit (1, juce::jmax (1, ds.size()), want + 1), juce::dontSendNotification);
 }
@@ -324,7 +324,7 @@ void MBVisualsEditor::pickColour (int index)
 {
     juce::CallOutBox::launchAsynchronously (std::make_unique<ColourPick> (proc, index), colBtn[index].getScreenBounds(), nullptr);
     const float want = index < 3 ? 8.f : 9.f;
-    if (proc.apvts.getRawParameterValue (ids::palette)->load() != want)
+    if (std::abs (proc.apvts.getRawParameterValue (ids::palette)->load() - want) > .5f)
         if (auto* p = proc.apvts.getParameter (ids::palette)) p->setValueNotifyingHost (p->convertTo0to1 (want));
 }
 
@@ -355,7 +355,8 @@ void MBVisualsEditor::timerCallback()
     fpsLabel.setColour (juce::Label::textColourId, fps > 0 && fps < 30 ? kAmber : kDim);
     bpmInfo.setText (s == 1 ? e.bpmInfo : juce::String(), juce::dontSendNotification);
     mLevel.v = e.uiLevel; mBass.v = e.uiBass; mMid.v = e.uiMid; mHigh.v = e.uiHigh; onsetDot.v = e.uiOnset;
-    for (auto* m : { &mLevel, &mBass, &mMid, &mHigh }) m->repaint(); onsetDot.repaint();
+    for (auto* m : { &mLevel, &mBass, &mMid, &mHigh }) m->repaint();
+    onsetDot.repaint();
     const bool running = e.uiXfRunning.load(); const int tgt = e.uiXfTarget.load();
     goA.setToggleState (running && tgt == 0, juce::dontSendNotification); goB.setToggleState (running && tgt == 1, juce::dontSendNotification);
     projBtn.setToggleState (proc.projectorOpen(), juce::dontSendNotification);

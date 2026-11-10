@@ -2,7 +2,7 @@
 #include <juce_core/juce_core.h>
 
 /*  Libreria degli shader dei deck: preset integrati (BinaryData) + cartella utente
-    (~/Documents/MBStudio91 Visuals/Shaders/*.glsl). Fornisce anche l'intestazione comune
+    (~/Documents/MBStudio91 Visuals/Shaders/, file .glsl). Fornisce anche l'intestazione comune
     (uniform e funzioni di aiuto, GLSL 1.50) e il generatore dello shader di uscita. */
 class ShaderLibrary
 {
