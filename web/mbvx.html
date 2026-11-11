@@ -270,6 +270,12 @@ body.learning [data-ctl].target{outline:2px solid var(--amber);box-shadow:0 0 0 
 #tip.show{opacity:1;transform:translateY(0)}
 #nogl{display:none;padding:60px 40px;font-size:16px;position:relative;z-index:1;text-align:center;color:var(--err)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+.logo-row{display:flex;align-items:center;gap:8px;margin:10px 0 6px;flex-wrap:wrap}
+.logo-fx{display:none;margin-bottom:8px}
+body.has-logo .logo-fx{display:grid}
+.deck.drop,.master.drop{outline:2px dashed var(--amber);outline-offset:-6px}
+#learnBanner{display:none;position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:70;background:rgba(255,181,71,0.95);color:#1a1200;font-weight:700;font-size:13px;padding:8px 16px;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,0.5)}
+body.learning #learnBanner{display:block}
 </style>
 </head>
 <body>
@@ -380,6 +386,25 @@ body.learning [data-ctl].target{outline:2px solid var(--amber);box-shadow:0 0 0 
       </label>
       <span class="lbl" style="text-transform:none;letter-spacing:0;font-size:10px;opacity:.7">interpolati sulla luminanza</span>
     </div>
+    <div class="logo-row">
+      <span class="lbl">Logo</span>
+      <button id="logoBtn" title="PNG circolare (o quadrato con sfondo trasparente) mostrato al centro dell'uscita">Carica PNG…</button>
+      <button id="logoClear" title="Togli il logo">✕</button>
+      <input id="logoIn" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+      <span class="media-name" id="logoName" style="margin:0">Nessun logo</span>
+    </div>
+    <div class="fx logo-fx">
+      <label class="ctl"><span class="row"><span class="lbl">Logo: dimensione</span><output id="logoSizeOut">30%</output></span>
+        <input id="logoSize" type="range" min="0.05" max="1" step="0.01" value="0.3" data-ctl="mix.logoSize"></label>
+      <label class="ctl"><span class="row"><span class="lbl">Logo: opacità</span><output id="logoAlphaOut">1.00</output></span>
+        <input id="logoAlpha" type="range" min="0" max="1" step="0.01" value="1" data-ctl="mix.logoAlpha"></label>
+      <label class="ctl"><span class="row"><span class="lbl">Logo: pulsa sul beat</span><output id="logoPulseOut">0.30</output></span>
+        <input id="logoPulse" type="range" min="0" max="1" step="0.01" value="0.3" data-ctl="mix.logoPulse"></label>
+      <label class="ctl"><span class="row"><span class="lbl">Logo: posizione X</span><output id="logoXOut">0.50</output></span>
+        <input id="logoX" type="range" min="0" max="1" step="0.01" value="0.5" data-ctl="mix.logoX"></label>
+      <label class="ctl"><span class="row"><span class="lbl">Logo: posizione Y</span><output id="logoYOut">0.50</output></span>
+        <input id="logoY" type="range" min="0" max="1" step="0.01" value="0.5" data-ctl="mix.logoY"></label>
+    </div>
     <div class="fx">
       <label class="ctl"><span class="row"><span class="lbl">Fusione</span></span>
         <select id="mode" data-ctl="mix.mode">
@@ -442,6 +467,14 @@ body.learning [data-ctl].target{outline:2px solid var(--amber);box-shadow:0 0 0 
       Con <b>Auto</b> acceso MBVX rileva la cassa, fa una stima grezza e poi la rifinisce allineando i colpi a una griglia di battiti: in 8–15 s arriva a pochi centesimi di BPM. Intervallo predefinito 88–176 BPM; se un brano viene letto a metà o al doppio usa <b>÷2</b> o <b>×2</b>. Passando sopra la spia AUDIO vedi quanti battiti usa la stima e lo scarto. Per il sincronismo perfetto con djay usa <b>Link</b>. <b>Qualità</b> (Auto, 100, 75, 50, 35%) riduce il calcolo dei deck se gli fps scendono. Per avere più fps: tieni il crossfader a un estremo quando non stai mixando (il deck nascosto si calcola solo in miniatura), lascia la <b>Scia</b> a zero se non serve (un passaggio in meno) e usa <b>Proietta</b> a schermo intero (anteprime e interfaccia si fermano).
     </div>
     <div>
+      <h4>Logo e sorgenti video</h4>
+      <b>Carica PNG…</b> (o trascina un PNG sul pannello MIX) mette il logo al centro dell'uscita, ritagliato in un cerchio e sopra palette ed effetti; dimensione, opacità, pulsazione sul beat e posizione sono cursori mappabili via MIDI. Il logo resta salvato nel browser e nel set. Sui deck, <b>Video / foto</b> o trascinamento sul pannello del deck: JPG/PNG/WebP e MP4 (H.264)/WebM; le foto HEIC dell'iPhone e i video HEVC/ProRes vanno convertiti. La sorgente si vede con il preset <b>Media</b> (o con uno shader che usa iChannel0).
+    </div>
+    <div>
+      <h4>MIDI</h4>
+      <b>MIDI</b> attiva i controller (Chrome, Edge, Brave), <b>Learn</b> entra in modalità assegnazione: clicca un cursore, pulsante o menu, poi muovi il controllo sul controller. Clic destro su un controllo toglie l'assegnazione; <kbd>Esc</kbd> o di nuovo Learn esce. Gli encoder senza fine corsa vengono riconosciuti al primo scatto (relativi). Clic destro su MIDI mostra l'elenco delle assegnazioni, salvate nel browser e nel set.
+    </div>
+    <div>
       <h4>Rotazione e spin</h4>
       Ogni deck ha <b>Rotazione</b> (angolo fisso) e <b>Spin</b> (rotazione continua, a destra orario, a sinistra antiorario, al centro fermo). <b>Free</b>: fino a 2 giri al secondo. <b>Tempo</b>: un giro ogni 32, 16, 8, 4, 2, 1 beat o 2 giri per beat, agganciato al BPM e a Link. <b>0°</b> azzera e riallinea il giro alla griglia dei beat. Tutti mappabili via MIDI.
     </div>
@@ -460,6 +493,7 @@ body.learning [data-ctl].target{outline:2px solid var(--amber);box-shadow:0 0 0 
   </div>
 </details>
 
+<div id="learnBanner">MIDI LEARN: clicca un controllo, poi muovi la manopola · clic destro = togli l'assegnazione · Esc per uscire</div>
 <div id="toast" role="status"></div>
 <div id="tip" role="tooltip"></div>
 
@@ -1308,11 +1342,14 @@ function postSource(c) {
   const D = k => `#define ${k} ${c[k] | 0}\n`;
   return `#version 300 es
 precision highp float;
-${['KIND', 'SRC', 'MODE', 'FB', 'HUE', 'KAL', 'MIRROR', 'ZOOM', 'INVERT', 'PAL', 'STROBE'].map(D).join('')}
+${['KIND', 'SRC', 'MODE', 'FB', 'HUE', 'KAL', 'MIRROR', 'ZOOM', 'INVERT', 'PAL', 'STROBE', 'LOGO'].map(D).join('')}
 uniform sampler2D uA,uB,uPrev,uT;
 uniform vec2 uRes;
 uniform float uXf,uFeedback,uHue,uPZ,uKaleido,uStrobePhase,uMaster;
 uniform vec3 uPalC1,uPalC2,uPalC3;
+uniform sampler2D uLogo;
+uniform vec4 uLogoP;   // diametro (frazione dell'altezza), opacità, rapporto larghezza/altezza del PNG, pulsazione
+uniform vec2 uLogoPos;
 out vec4 o;
 float luma(vec3 c){return dot(c,vec3(.299,.587,.114));}
 #if KIND!=1
@@ -1406,6 +1443,20 @@ vec3 outStage(vec3 c){
 #if STROBE
   c=uStrobePhase<.12?vec3(1.):c*.15;
 #endif
+#if LOGO
+  { // logo PNG ritagliato in un cerchio, sopra la palette: tiene i suoi colori
+    float dia=uLogoP.x*(1.+uLogoP.w);
+    vec2 q=(gl_FragCoord.xy/uRes-uLogoPos)*vec2(uRes.x/uRes.y,1.)/(dia*.5);
+    float r=length(q), px=2./max(dia*uRes.y,1.);
+    float m=1.-smoothstep(1.-px,1.+px,r);
+    if(m>0.){
+      float a=max(uLogoP.z,1e-3);
+      vec2 luv=(q*.5)*(a>1.?vec2(1./a,1.):vec2(1.,a))+.5;   // il cerchio inscritto nel lato corto del PNG
+      vec4 L=texture(uLogo,luv);
+      c=mix(c,L.rgb,L.a*m*uLogoP.y);
+    }
+  }
+#endif
   return c*uMaster;
 }
 #endif
@@ -1419,7 +1470,7 @@ void main(){
 #endif
 }`;
 }
-const POST_UNIFORMS = ['uA','uB','uPrev','uT','uRes','uXf','uFeedback','uHue','uPZ','uKaleido','uStrobePhase','uMaster','uPalC1','uPalC2','uPalC3'];
+const POST_UNIFORMS = ['uA','uB','uPrev','uT','uRes','uXf','uFeedback','uHue','uPZ','uKaleido','uStrobePhase','uMaster','uPalC1','uPalC2','uPalC3','uLogo','uLogoP','uLogoPos'];
 
 const canvas = $('#out');
 const canvasWrap = $('#canvasWrap');
@@ -1474,7 +1525,7 @@ function freeFbo(f) { if (!f) return; gl.deleteFramebuffer(f.fb); gl.deleteTextu
    varianti "solo A / solo B / entrambi" vengono preparate insieme, così i tagli sono immediati. */
 const post = { cache: new Map(), active: null, tick: 0 };
 function postEntry(c) {
-  const key = c.KIND + '|' + (c.KIND === 1 ? '' : [c.SRC, c.MODE, c.FB, c.HUE, c.KAL, c.MIRROR, c.ZOOM].join(',')) + '|' + (c.KIND === 0 ? '' : [c.INVERT, c.PAL, c.STROBE].join(','));
+  const key = c.KIND + '|' + (c.KIND === 1 ? '' : [c.SRC, c.MODE, c.FB, c.HUE, c.KAL, c.MIRROR, c.ZOOM].join(',')) + '|' + (c.KIND === 0 ? '' : [c.INVERT, c.PAL, c.STROBE, c.LOGO].join(','));
   let e = post.cache.get(key);
   if (!e) {
     e = { key, job: startProgram(postSource(c)), prog: null, u: null, failed: false, used: 0 };
@@ -1498,7 +1549,7 @@ function postReady(e, force) {
 function postSelect(src) {
   const fb = mix.feedback > 0.001 ? 1 : 0;
   const mk = SRC => ({ SRC, MODE: SRC ? 0 : mix.mode, FB: fb, HUE: mix.hue * Math.PI / 180 > .001 ? 1 : 0, KAL: mix.kaleido > 1.5 ? 1 : 0,
-    MIRROR: mix.mirror ? 1 : 0, ZOOM: mix.zoom > 0 ? 1 : 0, INVERT: mix.invert ? 1 : 0, PAL: mix.palette | 0, STROBE: mix.strobe ? 1 : 0 });
+    MIRROR: mix.mirror ? 1 : 0, ZOOM: mix.zoom > 0 ? 1 : 0, INVERT: mix.invert ? 1 : 0, PAL: mix.palette | 0, STROBE: mix.strobe ? 1 : 0, LOGO: logo.tex && mix.logoAlpha > 0.001 ? 1 : 0 });
   const want = SRC => { const c = mk(SRC); return fb ? [postEntry({ ...c, KIND: 0 }), postEntry({ ...c, KIND: 1 })] : [postEntry({ ...c, KIND: 2 })]; };
   const progs = want(src);
   const sig = progs.map(e => e.key).join(' ');
@@ -1524,6 +1575,11 @@ function postUniforms(e, pulse, vb) {
   gl.uniform1f(u.uMaster, mix.black ? 0 : mix.master);
   if (u.uPalC1) { gl.uniform3fv(u.uPalC1, rgbOf(mix.palC1)); gl.uniform3fv(u.uPalC2, rgbOf(mix.palC2)); gl.uniform3fv(u.uPalC3, rgbOf(mix.palC3)); }
   gl.uniform1i(u.uA, 0); gl.uniform1i(u.uB, 1); gl.uniform1i(u.uPrev, 2); gl.uniform1i(u.uT, 0);
+  if (u.uLogo && logo.tex) {
+    gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, logo.tex); gl.uniform1i(u.uLogo, 3); gl.activeTexture(gl.TEXTURE0);
+    gl.uniform4f(u.uLogoP, mix.logoSize, mix.logoAlpha, logo.aspect, pulse * mix.logoPulse * 0.25);
+    gl.uniform2f(u.uLogoPos, mix.logoX, mix.logoY);
+  }
 }
 
 const blackTex = makeTex(1, 1, new Uint8Array([0, 0, 0, 255]));
@@ -1565,8 +1621,49 @@ const mix = {
   xf: 0, mode: 0, feedback: 0, hue: 0, zoom: 0, kaleido: 0,
   strobe: false, strobeRate: 1, invert: false, mirror: false, black: false,
   master: 1, palette: 0,
-  palC1: '#00d4ff', palC2: '#ffb547', palC3: '#ff5470'
+  palC1: '#00d4ff', palC2: '#ffb547', palC3: '#ff5470',
+  logoSize: 0.3, logoAlpha: 1, logoPulse: 0.3, logoX: 0.5, logoY: 0.5
 };
+/* Logo PNG al centro dell'uscita: ritagliato in un cerchio, sopra palette ed effetti. Resta salvato nel browser. */
+const logo = { tex: null, aspect: 1, dataUrl: null, name: '' };
+function setLogoImage(img, name, dataUrl) {
+  clearLogo(true);
+  const MAX = 1024;                                       // i PNG delle fotocamere sono enormi: 1024 px bastano per un logo
+  let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  if (!w || !h) { toast('Immagine del logo non valida'); return; }
+  const k = Math.min(1, MAX / Math.max(w, h)); w = Math.max(1, Math.round(w * k)); h = Math.max(1, Math.round(h * k));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  c.getContext('2d').drawImage(img, 0, 0, w, h);
+  logo.tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, logo.tex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, c);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  logo.aspect = w / h; logo.name = name || 'logo';
+  logo.dataUrl = dataUrl || c.toDataURL('image/png');
+  try { localStorage.setItem('mbvx.logo', JSON.stringify({ name: logo.name, data: logo.dataUrl })); } catch (e) { /* troppo grande per il browser: resta solo per questa sessione */ }
+  const n = $('#logoName'); if (n) n.textContent = logo.name;
+  document.body.classList.add('has-logo');
+}
+function loadLogoFile(f) {
+  if (!f) return;
+  if (!/^image\/(png|jpeg|webp|gif|svg\+xml)$/.test(f.type)) { toast('Logo: usa un PNG (meglio con sfondo trasparente), JPG o WebP. ' + (f.type || f.name), 6000); return; }
+  const url = URL.createObjectURL(f); const img = new Image();
+  img.onload = () => { setLogoImage(img, f.name); URL.revokeObjectURL(url); toast('Logo: ' + f.name); };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('Il browser non riesce a leggere questa immagine: ' + f.name, 5000); };
+  img.src = url;
+}
+function clearLogo(silent) {
+  if (logo.tex) gl.deleteTexture(logo.tex);
+  logo.tex = null; logo.dataUrl = null; logo.name = '';
+  document.body.classList.remove('has-logo');
+  if (!silent) { try { localStorage.removeItem('mbvx.logo'); } catch (e) {} const n = $('#logoName'); if (n) n.textContent = 'Nessun logo'; }
+}
+function restoreLogo(data, name) {
+  if (!data) return;
+  const img = new Image(); img.onload = () => setLogoImage(img, name, data); img.src = data;
+}
 
 const clock = {
   bpm: 120, beat: 0, source: 'INT', auto: true, foldLo: 88, taps: [], barOffset: 0, offsetMs: 0, linkAt: 0, linkBeat: null,
@@ -1925,6 +2022,8 @@ function loadPreset(d, name, keepCode, sync) {
   d.preset = name; $(`#d${d.i}-preset`).value = name;
   if (!keepCode) d.code = PRESETS[name];
   $(`#d${d.i}-code`).value = d.code;
+  if (d.mediaKind && !/iChannel0/.test(d.code)) $(`#d${d.i}-mediaName`).textContent = '⚠ "' + name + '" non usa la sorgente: scegli il preset Media (o usa iChannel0 nello shader)';
+  else if (d.mediaKind && d.mediaEl) $(`#d${d.i}-mediaName`).textContent = d.mediaName || 'Sorgente caricata';
   compileDeck(d, true, sync);
   quality.upWait = 10;                                   // preset nuovo: la qualità automatica riparte senza attese lunghe
 }
@@ -1939,7 +2038,7 @@ function setMedia(d, kind, el, name) {
     const cb = () => { if (d.mediaEl !== el) return; d.vfDirty = true; el.requestVideoFrameCallback(cb); };
     el.requestVideoFrameCallback(cb);
   }
-  $(`#d${d.i}-mediaName`).textContent = name;
+  d.mediaName = name; $(`#d${d.i}-mediaName`).textContent = name;
   if (!/iChannel0/.test(d.code)) loadPreset(d, 'Media');
   if (kind === 'image') uploadMedia(d);
 }
@@ -1966,6 +2065,37 @@ function uploadMedia(d) {
   else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, el);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
   d.mediaRes = [w, h]; d.mediaReady = 1;
+}
+
+/* Carica una foto o un video sul deck. I formati che il browser non decodifica (HEIC/HEIF delle foto iPhone,
+   video HEVC/ProRes su alcuni sistemi) vengono segnalati invece di fallire in silenzio. */
+function loadMediaFile(d, f) {
+  if (!f) return;
+  const name = f.name, ext = (name.split('.').pop() || '').toLowerCase();
+  const isImg = f.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'heic', 'heif', 'avif'].includes(ext);
+  const isVid = f.type.startsWith('video/') || ['mp4', 'm4v', 'mov', 'webm', 'mkv', 'avi', 'ogv'].includes(ext);
+  if (['heic', 'heif'].includes(ext) || /hei[cf]/.test(f.type)) { toast('Le foto HEIC dell\'iPhone non si aprono nel browser: esportala in JPG (Foto → File → Esporta) e ricarica.', 7000); return; }
+  if (!isImg && !isVid) { toast('Formato non riconosciuto: ' + name + '. Usa JPG/PNG/WebP o MP4 (H.264)/WebM.', 6000); return; }
+  $(`#d${d.i}-mediaName`).textContent = 'Carico ' + name + '…';
+  const url = URL.createObjectURL(f);
+  if (isImg) {
+    const img = new Image();
+    img.onload = () => {
+      // le foto delle fotocamere sono 12-48 Mpx: come texture bastano 2048 px (e il caricamento è molto più rapido)
+      const MAX = 2048, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, MAX / Math.max(w, h));
+      let src = img;
+      if (k < 1) { const c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); src = c; }
+      setMedia(d, 'image', src, name); URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); $(`#d${d.i}-mediaName`).textContent = 'Nessuna sorgente: iChannel0 è nero'; toast('Il browser non riesce a leggere questa immagine (' + name + '). Prova JPG o PNG.', 6000); };
+    img.src = url;
+  } else {
+    const v = document.createElement('video'); v.loop = true; v.muted = true; v.playsInline = true; v.preload = 'auto';
+    v.onerror = () => { URL.revokeObjectURL(url); $(`#d${d.i}-mediaName`).textContent = 'Nessuna sorgente: iChannel0 è nero';
+      toast('Video non decodificabile (' + name + '): il browser non supporta questo codec. Converti in MP4 H.264 (es. HandBrake, preset "Fast 1080p30").', 8000); };
+    v.src = url;
+    v.play().then(() => setMedia(d, 'video', v, name)).catch(err => { if (!v.error) toast('Video non riproducibile: ' + err.message, 6000); });
+  }
 }
 
 async function openCamera(d) {
@@ -1995,17 +2125,7 @@ function buildDecks() {
     $(`#${p}-reset`).onclick = () => loadPreset(d, d.preset);
     $(`#${p}-preset`).addEventListener('change', e => loadPreset(d, e.target.value));
     $(`#${p}-file`).onclick = () => $(`#${p}-fileIn`).click();
-    $(`#${p}-fileIn`).addEventListener('change', e => {
-      const f = e.target.files[0]; if (!f) return;
-      const url = URL.createObjectURL(f);
-      if (f.type.startsWith('image/')) {
-        const img = new Image(); img.onload = () => { setMedia(d, 'image', img, f.name); URL.revokeObjectURL(url); }; img.src = url;
-      } else {
-        const v = document.createElement('video'); v.src = url; v.loop = true; v.muted = true; v.playsInline = true;
-        v.play().then(() => setMedia(d, 'video', v, f.name)).catch(err => toast('Video non riproducibile: ' + err.message));
-      }
-      e.target.value = '';
-    });
+    $(`#${p}-fileIn`).addEventListener('change', e => { loadMediaFile(d, e.target.files[0]); e.target.value = ''; });
     $(`#${p}-cam`).onclick = () => openCamera(d);
     $(`#${p}-clear`).onclick = () => clearMedia(d);
     bindRange(`${p}-p1`, v => d.p1 = v);
@@ -2379,6 +2499,22 @@ function bindTop() {
   bindRange('zoom', v => mix.zoom = v);
   bindRange('kaleido', v => mix.kaleido = v, v => v < 2 ? 'off' : v + ' spicchi');
   bindRange('master', v => mix.master = v);
+  bindRange('logoSize', v => mix.logoSize = v, v => Math.round(v * 100) + '%');
+  bindRange('logoAlpha', v => mix.logoAlpha = v);
+  bindRange('logoPulse', v => mix.logoPulse = v);
+  bindRange('logoX', v => mix.logoX = v);
+  bindRange('logoY', v => mix.logoY = v);
+  $('#logoBtn').onclick = () => $('#logoIn').click();
+  $('#logoIn').addEventListener('change', e => { loadLogoFile(e.target.files[0]); e.target.value = ''; });
+  $('#logoClear').onclick = () => { clearLogo(); toast('Logo tolto'); };
+  // trascina un PNG sul pannello MIX per usarlo come logo; un video/foto su un deck per caricarlo lì
+  const dropTargets = [[$('.master'), f => loadLogoFile(f)], [$('#deck0'), f => loadMediaFile(decks[0], f)], [$('#deck1'), f => loadMediaFile(decks[1], f)]];
+  dropTargets.forEach(([el, fn]) => {
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drop'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drop'));
+    el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('drop'); const f = e.dataTransfer.files[0]; if (f) fn(f); });
+  });
+  try { const l = JSON.parse(localStorage.getItem('mbvx.logo') || 'null'); if (l && l.data) restoreLogo(l.data, l.name); } catch (e) {}
   ['strobe', 'invert', 'mirror', 'black'].forEach(k => $('#' + k).onclick = () => { mix[k] = !mix[k]; syncUi(); });
 
   $('#fsBtn').onclick = toggleFullscreen;
@@ -2393,8 +2529,11 @@ function bindTop() {
   $('#loadFile').addEventListener('change', e => { const f = e.target.files[0]; if (f) f.text().then(t => { try { applySet(JSON.parse(t)); toast('Set caricato: ' + f.name); } catch (err) { toast('File non valido: ' + err.message); } }); e.target.value = ''; });
   $('#linkBtn').onclick = toggleLink;
   $('#midiBtn').onclick = initMidi;
-  $('#learnBtn').onclick = () => { learning = !learning; document.body.classList.toggle('learning', learning); $('#learnBtn').classList.toggle('on', learning); setTarget(null);
-    if (learning) toast(midiAccess ? 'Clicca un controllo, poi muovi la manopola sul controller.' : 'Prima premi MIDI per attivare i controller.'); };
+  $('#learnBtn').onclick = () => {
+    if (!learning && !midiAccess) { toast('Prima premi MIDI per attivare i controller.'); initMidi(); return; }
+    learning = !learning; document.body.classList.toggle('learning', learning); $('#learnBtn').classList.toggle('on', learning); setTarget(null);
+    toast(learning ? 'Clicca un controllo, poi muovi la manopola sul controller.' : midiSummary(), learning ? 4000 : 6000); };
+  $('#midiBtn').addEventListener('contextmenu', e => { e.preventDefault(); toast(midiSummary(), 8000); });
 }
 
 let outStream = null, outWin = null;
@@ -2441,6 +2580,20 @@ document.addEventListener('pointerdown', e => {
   e.preventDefault(); e.stopPropagation(); setTarget(el);
 }, true);
 document.addEventListener('click', e => { if (learning && e.target.closest('[data-ctl]')) { e.preventDefault(); e.stopPropagation(); } }, true);
+document.addEventListener('contextmenu', e => {
+  if (!learning) return;
+  const el = e.target.closest('[data-ctl]'); if (!el) return;
+  e.preventDefault();
+  const ctl = el.dataset.ctl; const keys = Object.keys(midiMap).filter(k => midiMap[k].split('#')[0] === ctl);
+  if (!keys.length) { toast(ctl + ': nessuna assegnazione MIDI'); return; }
+  keys.forEach(k => delete midiMap[k]); LS.set('midi', midiMap); delete el.dataset.tip;
+  toast(ctl + ': assegnazione tolta (' + keys.join(', ') + ')');
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && learning) $('#learnBtn').click(); });
+function midiSummary() {
+  const n = Object.keys(midiMap).length;
+  return n ? n + ' assegnazioni MIDI: ' + Object.entries(midiMap).map(([k, c]) => k + '→' + c).join(', ') : 'Nessuna assegnazione MIDI';
+}
 
 async function initMidi() {
   if (midiAccess) { toast('MIDI già attivo: ' + [...midiAccess.inputs.values()].map(i => i.name).join(', ')); return; }
@@ -2451,7 +2604,8 @@ async function initMidi() {
   hook(); midiAccess.onstatechange = hook;
   $('#midiBtn').classList.add('on');
   const names = [...midiAccess.inputs.values()].map(i => i.name);
-  toast(names.length ? 'MIDI: ' + names.join(', ') : 'MIDI attivo, nessun controller collegato.');
+  Object.entries(midiMap).forEach(([k, c]) => { const el = document.querySelector(`[data-ctl="${c.split('#')[0]}"]`); if (el) el.dataset.tip = 'MIDI ' + k + (c.endsWith('#rel') ? ' (encoder)' : ''); });
+  toast((names.length ? 'MIDI: ' + names.join(', ') : 'MIDI attivo, nessun controller collegato.') + ' · ' + midiSummary(), 7000);
 }
 function onMidi(ev) {
   const [st, d1, d2 = 0] = ev.data; const type = st & 0xf0, ch = st & 0x0f;
@@ -2462,12 +2616,22 @@ function onMidi(ev) {
   else return;
   const key = (kind === 'cc' ? 'cc' : 'n') + ':' + ch + ':' + d1;
   if (learning && learnTarget && kind !== 'off') {
-    midiMap[key] = learnTarget.dataset.ctl; LS.set('midi', midiMap);
-    learnTarget.removeAttribute('title'); learnTarget.dataset.tip = 'MIDI ' + key; toast(learnTarget.dataset.ctl + ' ← ' + key); setTarget(null); return;
+    // encoder senza fine corsa: al primo scatto mandano 1/127 (o 65/63) invece di un valore assoluto
+    const rel = kind === 'cc' && learnTarget.type === 'range' && [1, 2, 126, 127, 63, 62, 65, 66].includes(d2);
+    midiMap[key] = learnTarget.dataset.ctl + (rel ? '#rel' : ''); LS.set('midi', midiMap);
+    learnTarget.removeAttribute('title'); learnTarget.dataset.tip = 'MIDI ' + key + (rel ? ' (encoder)' : '');
+    toast(learnTarget.dataset.ctl + ' ← ' + key + (rel ? ' (encoder relativo)' : '')); setTarget(null); return;
   }
-  const ctl = midiMap[key]; if (!ctl) return;
+  const mapped = midiMap[key]; if (!mapped) return;
+  const [ctl, flag] = mapped.split('#');
   const el = document.querySelector(`[data-ctl="${ctl}"]`); if (!el) return;
   const v = d2 / 127;
+  if (flag === 'rel' && kind === 'cc' && el.type === 'range') {
+    // valori relativi: 1..63 = su, 127..65 = giù (complemento a due) oppure 65..127 = su, 63..1 = giù (offset 64)
+    const rel = d2 === 0 || d2 === 64 ? 0 : (d2 < 64 ? (d2 <= 16 ? d2 : d2 - 64) : (d2 >= 112 ? d2 - 128 : d2 - 64));
+    const min = parseFloat(el.min), max = parseFloat(el.max);
+    el.value = Math.min(max, Math.max(min, parseFloat(el.value) + rel * (max - min) / 100)); el.dispatchEvent(new Event('input')); return;
+  }
   if (el.tagName === 'BUTTON') {
     if (ctl === 'mix.strobe') { mix.strobe = kind === 'cc' ? v > 0.5 : kind === 'on'; syncUi(); return; }
     if (kind === 'on' || (kind === 'cc' && d2 >= 64 && !el._midiHigh)) el.click();
@@ -2541,8 +2705,10 @@ function snapshot() {
       xf: mix.xf, mode: mix.mode, feedback: mix.feedback, hue: mix.hue, zoom: mix.zoom,
       kaleido: mix.kaleido, strobeRate: mix.strobeRate, master: mix.master, mirror: mix.mirror,
       palette: mix.palette,
-      palC1: mix.palC1, palC2: mix.palC2, palC3: mix.palC3
+      palC1: mix.palC1, palC2: mix.palC2, palC3: mix.palC3,
+      logoSize: mix.logoSize, logoAlpha: mix.logoAlpha, logoPulse: mix.logoPulse, logoX: mix.logoX, logoY: mix.logoY
     },
+    logo: logo.dataUrl ? { name: logo.name, data: logo.dataUrl } : null,
     clock: { offsetMs: clock.offsetMs, foldLo: clock.foldLo },
     xfTime, qual: quality.mode,
     res: $('#resSel').value, midi: midiMap
@@ -2570,6 +2736,8 @@ function applySet(s) {
   if (m.palC2) { mix.palC2 = m.palC2; $('#palC2').value = m.palC2; }
   if (m.palC3) { mix.palC3 = m.palC3; $('#palC3').value = m.palC3; }
   if (m.palette != null) setPalette(+m.palette);
+  ['logoSize', 'logoAlpha', 'logoPulse', 'logoX', 'logoY'].forEach(k => { if (m[k] != null) setRange(k, m[k]); });
+  if (s.logo && s.logo.data) restoreLogo(s.logo.data, s.logo.name);
   mix.mirror = !!m.mirror;
   if (s.xfTime != null) setRange('xfTime', s.xfTime);
   if (s.qual && $(`#qualSel option[value="${s.qual}"]`)) setQualityMode(s.qual);
