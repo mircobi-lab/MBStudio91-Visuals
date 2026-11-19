@@ -111,4 +111,17 @@ body.mbs #lightsBtn.on{background:linear-gradient(var(--key-top),var(--key));col
 .brand .mbs-badge{font:400 22px/1 var(--f-display);letter-spacing:.12em;color:var(--print);background:none;border:1.5px solid var(--print);border-radius:3px;padding:4px 8px 2px}
 .brand .brand-sub{background:none;border:0;padding:0;font-size:12px}
 body.mbs textarea.code{font:12px/1.6 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:0}
+.midi-menu{position:fixed;z-index:95;width:min(360px,calc(100vw - 16px));max-height:min(70vh,560px);overflow:auto;padding:8px;
+  background:linear-gradient(var(--chassis-top),var(--chassis-bottom));border:1px solid #000;border-top-color:var(--key-edge);border-radius:3px;box-shadow:0 14px 40px #000}
+.midi-menu .mm-head{font:400 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--print);padding:10px 4px 6px;border-bottom:1px solid #000;box-shadow:0 1px 0 var(--engrave);margin-bottom:6px}
+.midi-menu .mm-row{display:flex;gap:4px;margin:3px 0}
+body.mbs .midi-menu .mm-item{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;position:relative;padding:8px 10px 6px 26px;font-size:15px}
+body.mbs .midi-menu .mm-item::before{content:"";position:absolute;left:10px;top:13px;width:7px;height:7px;border-radius:50%;background:var(--led-off)}
+body.mbs .midi-menu .mm-item.on::before{background:var(--led-green);box-shadow:0 0 6px var(--led-green)}
+.midi-menu .mm-item small{font:300 11px/1 var(--f-label);letter-spacing:.08em;color:var(--print-dim)}
+body.mbs .midi-menu .mm-del{padding:0 10px}
+.midi-menu .mm-empty{font-size:13px;color:var(--print-dim);padding:4px 4px 8px;line-height:1.4}
+.midi-menu .mm-foot{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #000;box-shadow:0 1px 0 var(--engrave) inset}
+.midi-menu .mm-foot button{flex:1}
+.midi-menu .mm-status{font-size:12px;color:var(--print-dim);padding:8px 4px 2px}
 .mbvx-foot{display:flex;justify-content:flex-end;padding:0 max(20px,env(safe-area-inset-right,0px)) 28px}

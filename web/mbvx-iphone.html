@@ -583,6 +583,19 @@ body.mbs #lightsBtn.on{background:linear-gradient(var(--key-top),var(--key));col
 .brand .mbs-badge{font:400 22px/1 var(--f-display);letter-spacing:.12em;color:var(--print);background:none;border:1.5px solid var(--print);border-radius:3px;padding:4px 8px 2px}
 .brand .brand-sub{background:none;border:0;padding:0;font-size:12px}
 body.mbs textarea.code{font:12px/1.6 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:0}
+.midi-menu{position:fixed;z-index:95;width:min(360px,calc(100vw - 16px));max-height:min(70vh,560px);overflow:auto;padding:8px;
+  background:linear-gradient(var(--chassis-top),var(--chassis-bottom));border:1px solid #000;border-top-color:var(--key-edge);border-radius:3px;box-shadow:0 14px 40px #000}
+.midi-menu .mm-head{font:400 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--print);padding:10px 4px 6px;border-bottom:1px solid #000;box-shadow:0 1px 0 var(--engrave);margin-bottom:6px}
+.midi-menu .mm-row{display:flex;gap:4px;margin:3px 0}
+body.mbs .midi-menu .mm-item{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;position:relative;padding:8px 10px 6px 26px;font-size:15px}
+body.mbs .midi-menu .mm-item::before{content:"";position:absolute;left:10px;top:13px;width:7px;height:7px;border-radius:50%;background:var(--led-off)}
+body.mbs .midi-menu .mm-item.on::before{background:var(--led-green);box-shadow:0 0 6px var(--led-green)}
+.midi-menu .mm-item small{font:300 11px/1 var(--f-label);letter-spacing:.08em;color:var(--print-dim)}
+body.mbs .midi-menu .mm-del{padding:0 10px}
+.midi-menu .mm-empty{font-size:13px;color:var(--print-dim);padding:4px 4px 8px;line-height:1.4}
+.midi-menu .mm-foot{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #000;box-shadow:0 1px 0 var(--engrave) inset}
+.midi-menu .mm-foot button{flex:1}
+.midi-menu .mm-status{font-size:12px;color:var(--print-dim);padding:8px 4px 2px}
 .mbvx-foot{display:flex;justify-content:flex-end;padding:0 max(20px,env(safe-area-inset-right,0px)) 28px}
 </style>
 </head>
@@ -618,7 +631,7 @@ body.mbs textarea.code{font:12px/1.6 ui-monospace,"SF Mono",Menlo,Consolas,monos
   <div class="spacer"></div>
   <div class="group">
     <button id="linkBtn" title="Collega il bridge Ableton Link (bridge.js)">Link</button>
-    <button id="midiBtn" title="Attiva i controller MIDI">MIDI</button>
+    <button id="midiBtn" title="Controller MIDI: scegli una mappa predefinita o una tua" aria-haspopup="menu">MIDI ▾</button>
     <button id="learnBtn" title="Associa un controllo MIDI a un comando">Learn</button>
     <select id="qualSel" aria-label="Qualità di calcolo" title="Qualità di calcolo dei deck: a 75%, 50% o 35% la scheda video lavora molto meno (l'uscita resta alla risoluzione scelta). Auto la regola da sola guardando gli fps.">
       <option value="auto">Auto</option><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option><option value="0.35">35%</option>
@@ -3663,7 +3676,7 @@ function bindTop() {
   $('#loadBtn').onclick = () => $('#loadFile').click();
   $('#loadFile').addEventListener('change', e => { const f = e.target.files[0]; if (f) f.text().then(t => { try { applySet(JSON.parse(t)); toast('Set caricato: ' + f.name); } catch (err) { toast('File non valido: ' + err.message); } }); e.target.value = ''; });
   $('#linkBtn').onclick = toggleLink;
-  $('#midiBtn').onclick = initMidi;
+  $('#midiBtn').onclick = async () => { if (!midiAccess) await initMidi(); midiMenuOpen(); };
   $('#learnBtn').onclick = () => {
     if (!learning && !midiAccess) { toast('Prima premi MIDI per attivare i controller.'); initMidi(); return; }
     learning = !learning; document.body.classList.toggle('learning', learning); $('#learnBtn').classList.toggle('on', learning); setTarget(null);
@@ -3708,6 +3721,131 @@ function toggleLink() {
 
 let midiAccess = null, learning = false, learnTarget = null;
 let midiMap = LS.get('midi', {});
+// ===== Mappe MIDI predefinite e mappe personali (menu del tasto MIDI) =====
+// Chiave: 'cc:<canale 0-15>:<numero>' oppure 'n:<canale 0-15>:<nota>'. Valore: data-ctl del comando.
+// Fonti dei messaggi: guide e Programmer's Reference di Novation e M-Audio (vedi web/README.md).
+const MIDI_PRESETS = (() => {
+  const P = {};
+  const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+  // Pad "drum" dei Launchkey: fila alta 40-43 e 48-51, fila bassa 36-39 e 44-47, sempre sul canale 10 (indice 9)
+  const lkPads = {
+    'n:9:40': 'd0.preset', 'n:9:41': 'mix.goA', 'n:9:42': 'mix.goB', 'n:9:43': 'd1.preset',
+    'n:9:48': 'mix.palette', 'n:9:49': 'mix.kalGrid', 'n:9:50': 'mix.mode', 'n:9:51': 'mix.strobeRate',
+    'n:9:36': 'clock.tap', 'n:9:37': 'clock.down', 'n:9:38': 'mix.strobe', 'n:9:39': 'mix.black',
+    'n:9:44': 'mix.invert', 'n:9:45': 'mix.mirror', 'n:9:46': 'd0.spinReset', 'n:9:47': 'd1.spinReset' };
+  const knobs = (ctls, chans) => { const m = {}; chans.forEach(ch => ctls.forEach((c, i) => { m[`cc:${ch}:${21 + i}`] = c; })); return m; };
+
+  P['launchkey-mini'] = { match: 'launchkey', name: 'Novation Launchkey Mini MK1 / MK2 / MK3',
+    hint: 'MK1/MK2: InControl spento (modalità Basic). MK3: pad in modalità Drum (Shift + pad Drum).',
+    map: { ...knobs(['d0.p1', 'd0.p2', 'd1.p1', 'd1.p2', 'mix.xf', 'mix.feedback', 'mix.zoom', 'mix.hue'], [0, 15]), ...lkPads,
+      'cc:0:104': 'clock.dbl', 'cc:0:105': 'clock.half',                // frecce su/giù
+      'cc:0:108': 'mix.goA', 'cc:0:109': 'mix.goB',                     // tasti tondi (MK1/MK2)
+      'cc:0:106': 'clock.nudgeL', 'cc:0:107': 'clock.nudgeR',           // traccia </> (MK1/MK2)
+      'cc:15:103': 'clock.nudgeL', 'cc:15:102': 'clock.nudgeR',         // frecce sinistra/destra (MK3)
+      'cc:15:115': 'clock.auto', 'cc:15:117': 'mix.black' } };          // Play e Record (MK3)
+
+  P['launchkey-61'] = { match: 'launchkey', name: 'Novation Launchkey 61',
+    hint: 'Manopole CC 21-28, pad in modalità Drum. Fader CC 41-48 e master CC 7 (Launchkey originale/MK2); sui MK3 usa Learn per i fader.',
+    map: { ...knobs(['d0.p1', 'd0.p2', 'd1.p1', 'd1.p2', 'mix.feedback', 'mix.zoom', 'mix.hue', 'mix.kaleido'], [0, 15]), ...lkPads,
+      'cc:0:41': 'd0.speed', 'cc:0:42': 'd0.react', 'cc:0:43': 'd0.spin', 'cc:0:44': 'mix.xfTime',
+      'cc:0:45': 'mix.master', 'cc:0:46': 'd1.spin', 'cc:0:47': 'd1.react', 'cc:0:48': 'd1.speed',
+      'cc:0:7': 'mix.xf',                                               // fader master = crossfader
+      'cc:0:104': 'mix.goA', 'cc:0:105': 'mix.goB',                     // tasti tondi accanto ai pad
+      'cc:15:115': 'clock.auto', 'cc:15:117': 'mix.black' } };
+
+  // Launchpad: righe dal basso (1) all'alto (8), colonne da sinistra (1) a destra (8)
+  const lpLayout = {
+    1: ['clock.tap', 'clock.down', 'clock.half', 'clock.dbl', 'clock.nudgeL', 'clock.nudgeR', 'clock.auto', 'mix.black'],
+    2: ['mix.strobe', 'mix.invert', 'mix.mirror', 'mix.palette', 'mix.kalGrid', 'mix.mode', 'mix.strobeRate', null],
+    3: ['d0.preset', 'd0.spinMode', 'd0.spinReset', null, null, 'd1.spinReset', 'd1.spinMode', 'd1.preset'],
+    4: ['mix.goA', null, null, null, null, null, null, 'mix.goB'] };
+  const lpTop = ['d0.preset', 'd1.preset', 'mix.goA', 'mix.goB', 'clock.tap', 'clock.down', 'mix.invert', 'mix.mirror'];
+  const lpSide = ['mix.black', 'mix.strobe', 'mix.invert', 'mix.mirror', 'd0.spinReset', 'd1.spinReset', 'clock.half', 'clock.dbl']; // dall'alto
+
+  const mk3 = {};
+  Object.entries(lpLayout).forEach(([r, row]) => row.forEach((c, i) => { if (c) mk3[`n:0:${r * 10 + i + 1}`] = c; }));
+  lpTop.forEach((c, i) => { mk3[`cc:0:${91 + i}`] = c; });
+  lpSide.forEach((c, i) => { mk3[`cc:0:${89 - i * 10}`] = c; });
+  P['launchpad-mini-mk3'] = { match: 'launchpad', name: 'Novation Launchpad Mini MK3',
+    hint: 'Metti il Launchpad in Programmer mode: tieni premuto Session, poi premi il tasto Scene Launch in basso (arancione).', map: mk3 };
+
+  const old = {};   // Launchpad Mini MK1/MK2: nota = 16 × riga + colonna, riga 0 in alto; tasti tondi in alto CC 104-111
+  Object.entries(lpLayout).forEach(([r, row]) => row.forEach((c, i) => { if (c) old[`n:0:${16 * (8 - r) + i}`] = c; }));
+  lpTop.forEach((c, i) => { old[`cc:0:${104 + i}`] = c; });
+  lpSide.forEach((c, i) => { old[`n:0:${16 * i + 8}`] = c; });
+  P['launchpad-mini-old'] = { match: 'launchpad', name: 'Novation Launchpad Mini MK1 / MK2',
+    hint: 'Layout X-Y di fabbrica (canale 1).', map: old };
+
+  P['keystation'] = { match: 'keystation', name: 'M-Audio Keystation (tutta la serie)',
+    hint: 'Rotella modulazione = crossfader, slider/manopola volume = master, pedale = strobo. Tasti da Do centrale (60) a Si (71), con l\'ottava a 0.',
+    map: { 'cc:0:1': 'mix.xf', 'cc:0:7': 'mix.master', 'cc:0:64': 'mix.strobe',
+      'n:0:60': 'mix.goA', 'n:0:61': 'mix.invert', 'n:0:62': 'mix.goB', 'n:0:63': 'mix.mirror',
+      'n:0:64': 'd0.preset', 'n:0:65': 'd1.preset', 'n:0:66': 'clock.down', 'n:0:67': 'clock.tap',
+      'n:0:68': 'mix.palette', 'n:0:69': 'mix.black', 'n:0:70': 'mix.kalGrid', 'n:0:71': 'mix.strobe' } };
+  return P;
+})();
+// ===== Menu del tasto MIDI: mappe predefinite in alto, mappe personali in fondo =====
+let midiUserMaps = LS.get('midiMaps', {});          // { "nome controller": { chiave: comando } }
+let midiActive = LS.get('midiActive', '');           // 'preset:<id>' oppure 'user:<nome>'
+let midiLastDevice = '';
+function midiTipsRefresh() {
+  $$('[data-ctl]').forEach(el => { if (el.dataset.tip && el.dataset.tip.startsWith('MIDI ')) delete el.dataset.tip; });
+  Object.entries(midiMap).forEach(([k, c]) => { const el = document.querySelector(`[data-ctl="${c.split('#')[0]}"]`); if (el) el.dataset.tip = 'MIDI ' + k + (c.endsWith('#rel') ? ' (encoder)' : ''); });
+}
+function midiUse(kind, id) {
+  const src = kind === 'preset' ? MIDI_PRESETS[id] && MIDI_PRESETS[id].map : midiUserMaps[id];
+  if (!src) return;
+  midiMap = { ...src }; midiActive = kind + ':' + id;
+  LS.set('midi', midiMap); LS.set('midiActive', midiActive); midiTipsRefresh(); midiMenuClose();
+  const name = kind === 'preset' ? MIDI_PRESETS[id].name : id;
+  toast(name + ' - ' + Object.keys(midiMap).length + ' comandi' + (kind === 'preset' ? '. ' + MIDI_PRESETS[id].hint : ''), 7000);
+  if (!midiAccess) initMidi();
+}
+// Dopo ogni assegnazione con Learn: la mappa viene salvata col nome del controller e compare in fondo all'elenco
+function midiSaveLearned() {
+  let name = midiActive.startsWith('user:') ? midiActive.slice(5) : (midiLastDevice || 'Controller');
+  if (!midiActive.startsWith('user:') && midiUserMaps[name] && !confirm('Esiste già la mappa "' + name + '". Sovrascriverla?')) {
+    let i = 2; while (midiUserMaps[name + ' ' + i]) i++; name = name + ' ' + i;
+  }
+  midiUserMaps[name] = { ...midiMap }; midiActive = 'user:' + name;
+  LS.set('midiMaps', midiUserMaps); LS.set('midiActive', midiActive);
+}
+const nCmd = n => n + (n === 1 ? ' comando' : ' comandi');
+function midiMenuClose() { const m = $('#midiMenu'); if (m) m.remove(); document.removeEventListener('pointerdown', midiMenuOutside, true); }
+function midiMenuOutside(e) { if (!e.target.closest('#midiMenu') && e.target.id !== 'midiBtn') midiMenuClose(); }
+function midiMenuOpen() {
+  if ($('#midiMenu')) { midiMenuClose(); return; }
+  const m = document.createElement('div'); m.id = 'midiMenu'; m.className = 'midi-menu'; m.setAttribute('role', 'menu');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const item = (kind, id, label, sub, del) =>
+    `<div class="mm-row"><button class="mm-item${midiActive === kind + ':' + id ? ' on' : ''}" data-kind="${kind}" data-id="${esc(id)}" role="menuitem">${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</button>` +
+    (del ? `<button class="mm-del" data-id="${esc(id)}" title="Elimina questa mappa">✕</button>` : '') + '</div>';
+  const users = Object.keys(midiUserMaps);
+  const inputs = midiAccess ? [...midiAccess.inputs.values()].map(i => i.name).join(', ') : '';
+  m.innerHTML =
+    `<div class="mm-head">Mappe predefinite</div>` +
+    Object.entries(MIDI_PRESETS).map(([id, p]) => item('preset', id, p.name, nCmd(Object.keys(p.map).length))).join('') +
+    `<div class="mm-head">Mappe personali</div>` +
+    (users.length ? users.map(n => item('user', n, n, nCmd(Object.keys(midiUserMaps[n]).length), true)).join('')
+                  : `<div class="mm-empty">Nessuna: premi Learn, clicca un comando e muovi il controller. La mappa compare qui col nome del controller.</div>`) +
+    `<div class="mm-foot"><button class="mm-new">+ Nuova mappa (Learn)</button><button class="mm-clear">Nessuna mappa</button></div>` +
+    `<div class="mm-status">${midiAccess ? (inputs ? 'Collegati: ' + esc(inputs) : 'Nessun controller collegato') : 'MIDI non ancora attivo'}</div>`;
+  document.body.appendChild(m);
+  const r = $('#midiBtn').getBoundingClientRect();
+  m.style.top = (r.bottom + 6) + 'px';
+  m.style.left = Math.max(8, Math.min(window.innerWidth - m.offsetWidth - 8, r.left)) + 'px';
+  m.addEventListener('click', e => {
+    const it = e.target.closest('.mm-item'); if (it) { midiUse(it.dataset.kind, it.dataset.id); return; }
+    const del = e.target.closest('.mm-del');
+    if (del) { const n = del.dataset.id; if (confirm('Eliminare la mappa "' + n + '"?')) { delete midiUserMaps[n]; LS.set('midiMaps', midiUserMaps);
+      if (midiActive === 'user:' + n) { midiActive = ''; LS.set('midiActive', ''); } midiMenuClose(); midiMenuOpen(); } return; }
+    if (e.target.closest('.mm-new')) { midiMap = {}; midiActive = ''; LS.set('midi', midiMap); LS.set('midiActive', ''); midiTipsRefresh(); midiMenuClose();
+      if (!learning) $('#learnBtn').click(); return; }
+    if (e.target.closest('.mm-clear')) { midiMap = {}; midiActive = ''; LS.set('midi', midiMap); LS.set('midiActive', ''); midiTipsRefresh(); midiMenuClose(); toast('Nessuna mappa MIDI attiva'); }
+  });
+  setTimeout(() => document.addEventListener('pointerdown', midiMenuOutside, true), 0);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') midiMenuClose(); });
 function setTarget(el) { $$('[data-ctl].target').forEach(e => e.classList.remove('target')); learnTarget = el; if (el) el.classList.add('target'); }
 document.addEventListener('pointerdown', e => {
   if (!learning) return;
@@ -3722,6 +3860,7 @@ document.addEventListener('contextmenu', e => {
   const ctl = el.dataset.ctl; const keys = Object.keys(midiMap).filter(k => midiMap[k].split('#')[0] === ctl);
   if (!keys.length) { toast(ctl + ': nessuna assegnazione MIDI'); return; }
   keys.forEach(k => delete midiMap[k]); LS.set('midi', midiMap); delete el.dataset.tip;
+  if (midiActive.startsWith('user:')) { midiUserMaps[midiActive.slice(5)] = { ...midiMap }; LS.set('midiMaps', midiUserMaps); }
   toast(ctl + ': assegnazione tolta (' + keys.join(', ') + ')');
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && learning) $('#learnBtn').click(); });
@@ -3743,6 +3882,7 @@ async function initMidi() {
   toast((names.length ? 'MIDI: ' + names.join(', ') : 'MIDI attivo, nessun controller collegato.') + ' · ' + midiSummary(), 7000);
 }
 function onMidi(ev) {
+  if (ev.target && ev.target.name) midiLastDevice = ev.target.name;
   const [st, d1, d2 = 0] = ev.data; const type = st & 0xf0, ch = st & 0x0f;
   let kind;
   if (type === 0xb0) kind = 'cc';
@@ -3753,7 +3893,10 @@ function onMidi(ev) {
   if (learning && learnTarget && kind !== 'off') {
     // encoder senza fine corsa: al primo scatto mandano 1/127 (o 65/63) invece di un valore assoluto
     const rel = kind === 'cc' && learnTarget.type === 'range' && [1, 2, 126, 127, 63, 62, 65, 66].includes(d2);
-    midiMap[key] = learnTarget.dataset.ctl + (rel ? '#rel' : ''); LS.set('midi', midiMap);
+    midiLastDevice = (ev.target && ev.target.name) || midiLastDevice;
+    // controller diverso da quello della mappa predefinita attiva: la nuova mappa parte vuota
+    if (midiActive.startsWith('preset:')) { const pr = MIDI_PRESETS[midiActive.slice(7)]; if (pr && !midiLastDevice.toLowerCase().includes(pr.match)) { midiMap = {}; midiActive = ''; } }
+    midiMap[key] = learnTarget.dataset.ctl + (rel ? '#rel' : ''); LS.set('midi', midiMap); midiSaveLearned();
     learnTarget.removeAttribute('title'); learnTarget.dataset.tip = 'MIDI ' + key + (rel ? ' (encoder)' : '');
     toast(learnTarget.dataset.ctl + ' ← ' + key + (rel ? ' (encoder relativo)' : '')); setTarget(null); return;
   }
@@ -3881,7 +4024,7 @@ function applySet(s) {
   if (s.qual && $(`#qualSel option[value="${s.qual}"]`)) setQualityMode(s.qual);
   if (s.clock) { setRange('offset', s.clock.offsetMs); if (s.clock.foldLo) clock.foldLo = s.clock.foldLo; }
   if (s.res && $(`#resSel option[value="${s.res}"]`)) { $('#resSel').value = s.res; const [w, h] = s.res.split('x').map(Number); setResolution(w, h); }
-  if (s.midi) { midiMap = s.midi; LS.set('midi', midiMap); }
+  if (s.midi) { midiMap = s.midi; LS.set('midi', midiMap); midiActive = ''; LS.set('midiActive', ''); midiTipsRefresh(); }
   syncUi();
 }
 function saveSet() {
