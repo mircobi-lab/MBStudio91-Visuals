@@ -155,6 +155,28 @@ preme un pulsante a ogni beat, tiene premuto lo strobo, muove due cursori con li
   può entrare in un progetto open source. Per apparecchi Kling-Net usa, se lo hanno, il modo DMX/Art-Net, oppure il
   software ArKaos (Kling-Net Mapper / MediaMaster) per la parte Kling-Net.
 
+## Aspetto "hardware" MBStudio (MBStudioUI)
+
+L'interfaccia usa il kit riutilizzabile `MBStudioUI/`, pensato per tutti i plugin MBStudio:
+telaio nero opaco, scritte bianche stampate in maiuscolo, chip bianchi invertiti, LED blu/verdi/ambra,
+tasti in gomma con LED, fader con scala a tacche, zone incassate, logo MBSTUDIO91™ stampato o impresso.
+
+Per usarlo in un nuovo plugin JUCE:
+
+```cmake
+include(MBStudioUI/MBStudioUI.cmake)
+mbstudio_ui_add(NomeTarget)      # font + logo in binary data, LookAndFeel compilato nel target
+```
+
+```cpp
+#include "MBStudioLookAndFeel.h"
+mbstudio::ui::HardwareLookAndFeel lnf;   // setLookAndFeel(&lnf) nell'editor
+// nel paint(): ui::paintChassis, ui::paintBrand(area, "NOME"), ui::paintRecess, ui::paintChip, ui::paintLed
+// pulsante con LED:  btn.getProperties().set("led", true); btn.getProperties().set("ledColour", "ff3ee05c");
+```
+
+Font inclusi: **Bebas Neue** (titoli) e **Antonio** Thin/Light/Bold (etichette e numeri), entrambi SIL OFL 1.1.
+
 ## Compilare
 
 Richiede CMake ≥ 3.22 e un compilatore C++17. JUCE 9.0.5 viene scaricato automaticamente
@@ -194,3 +216,6 @@ scarto 1,5 ms.
   (termini e livelli su juce.com/legal/juce-9-licence).
 - VST3 SDK 3.8.0 (incluso in JUCE, vedi `JUCE.spdx.json`) con licenza MIT; "VST" è un marchio di Steinberg Media
   Technologies GmbH. L'uso del logo VST non è richiesto.
+- Font in `MBStudioUI/fonts/`: Bebas Neue (© Dharma Type) e Antonio (© Vernon Adams; istanze statiche 100/300/700
+  generate dal font variabile con fontTools), entrambi **SIL Open Font License 1.1** (testi in `OFL-*.txt`).
+- Logo MBSTUDIO91™ in `MBStudioUI/brand/`: marchio di MBStudio91, non coperto dalla licenza AGPL del codice.

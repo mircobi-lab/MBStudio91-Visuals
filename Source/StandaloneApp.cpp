@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "MBStudioLookAndFeel.h"
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_audio_plugin_client/juce_audio_plugin_client.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
@@ -61,8 +62,8 @@ public:
             }
         }
 
-        mainWindow = std::make_unique<juce::StandaloneFilterWindow> (getApplicationName(),
-                                                                     juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId),
+        juce::LookAndFeel::setDefaultLookAndFeel (&hardwareLook);          // finestre, menu e dialoghi nello stile MBStudio
+        mainWindow = std::make_unique<juce::StandaloneFilterWindow> (getApplicationName(), mbstudio::ui::colours::chassisBottom,
                                                                      settings, false, preferredDevice, setupPtr,
                                                                      juce::Array<juce::StandalonePluginHolder::PluginInOuts>(), true);
         mainWindow->setVisible (true);
@@ -87,13 +88,14 @@ public:
             else if (a == "--feedback") set (mbv::ids::feedback, v.getFloatValue());
             else if (a == "--test-tone") proc->testTone = true;
             else if (a == "--show-lights") juce::Timer::callAfterDelay (500, [proc] { if (auto* ed = dynamic_cast<MBVisualsEditor*> (proc->getActiveEditor())) ed->showLights(); });
-            else if (a == "--lights") { juce::String err; if (! proc->lights.loadJson (juce::File (v).loadFileAsString(), err)) DBG ("patch luci: " << err); }
+            else if (a == "--lights") { juce::String err; if (! proc->lights.loadJson (juce::File (v).loadFileAsString(), err)) { DBG ("patch luci: " << err); } }
         }
     }
 
     void shutdown() override
     {
         mainWindow = nullptr;
+        juce::LookAndFeel::setDefaultLookAndFeel (nullptr);
         appProperties.saveIfNeeded();
     }
 
@@ -109,6 +111,7 @@ public:
 private:
     juce::ApplicationProperties appProperties;
     juce::OwnedArray<juce::AudioIODeviceType> probeTypes;
+    mbstudio::ui::HardwareLookAndFeel hardwareLook;
     std::unique_ptr<juce::StandaloneFilterWindow> mainWindow;
 };
 

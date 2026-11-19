@@ -1,9 +1,11 @@
 #include "LightsWindow.h"
+#include "MBStudioLookAndFeel.h"
 
 namespace
 {
-    const juce::Colour kBg (0xff0b0d12), kPanel (0xff141821), kLine (0xff252b38), kText (0xffe8ecf3), kDim (0xff8a93a6), kAmber (0xffffb547), kErr (0xffff5470), kOk (0xff4ade80);
-    juce::Font f (float h, bool bold = false) { return juce::Font (juce::FontOptions (h, bold ? juce::Font::bold : juce::Font::plain)); }
+    namespace C = mbstudio::ui::colours;
+    const juce::Colour kBg = C::chassisBottom, kPanel = C::recess, kLine = C::engrave, kText = C::print, kDim = C::printDim, kAmber = C::ledAmber, kErr = C::ledRed, kOk = C::ledGreen;
+    juce::Font f (float h, bool bold = false) { return bold ? mbstudio::ui::Fonts::display (h * 1.3f) : mbstudio::ui::Fonts::label (h * 1.3f); }
 
     void styleEditor (juce::TextEditor& e, bool numeric)
     {
@@ -151,8 +153,8 @@ public:
     void paint (juce::Graphics& g) override
     {
         auto r = getLocalBounds().toFloat().reduced (2);
-        g.setColour (kPanel); g.fillRoundedRectangle (r, 8.f);
-        g.setColour (selected ? kAmber : kLine); g.drawRoundedRectangle (r, 8.f, selected ? 1.5f : 1.f);
+        mbstudio::ui::paintEngravedLine (g, { r.getX() + 6.f, r.getBottom() }, { r.getRight() - 6.f, r.getBottom() });
+        mbstudio::ui::paintLed (g, { r.getX() + 6.f, r.getY() + 14.f }, 3.f, C::ledBlue, selected ? 1.f : 0.f);
     }
     void mouseDown (const juce::MouseEvent&) override { if (onSelect) onSelect(); }
     void resized() override
@@ -249,7 +251,7 @@ public:
         ip.setText (cfg.ip, juce::dontSendNotification); oscHost.setText (cfg.oscHost, juce::dontSendNotification); oscPort.setText (juce::String (cfg.oscPort), juce::dontSendNotification);
         rebuildRows();
     }
-    void paint (juce::Graphics& g) override { g.fillAll (kBg); }
+    void paint (juce::Graphics& g) override { mbstudio::ui::paintChassis (g, getLocalBounds()); }
     void resized() override
     {
         auto r = getLocalBounds().reduced (12);

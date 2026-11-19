@@ -1,4 +1,5 @@
 #include "ShaderEditorWindow.h"
+#include "MBStudioLookAndFeel.h"
 
 using namespace mbv;
 
@@ -14,21 +15,21 @@ public:
         saveBtn.setTooltip ("Salva come preset utente in Documenti/MBStudio91 Visuals/Shaders"); saveBtn.onClick = [this] { save(); }; addAndMakeVisible (saveBtn);
         resetBtn.setTooltip ("Scarta le modifiche e torna al preset scelto nel deck"); resetBtn.onClick = [this] { proc.setCustomCode (deck, {}); load (deck); }; addAndMakeVisible (resetBtn);
         folderBtn.setTooltip ("Apre la cartella dei preset utente"); folderBtn.onClick = [] { auto f = ShaderLibrary::userFolder(); f.createDirectory(); f.revealToUser(); }; addAndMakeVisible (folderBtn);
-        editor.setFont (juce::Font (juce::FontOptions (juce::Font::getDefaultMonospacedFontName(), 13.f, juce::Font::plain)));
+        editor.setFont (juce::Font (juce::FontOptions (juce::Font::getDefaultMonospacedFontName(), 14.f, juce::Font::plain)));
         editor.setTabSize (2, true);
-        editor.setColour (juce::CodeEditorComponent::backgroundColourId, juce::Colour (0xff0b0d12));
-        editor.setColour (juce::CodeEditorComponent::defaultTextColourId, juce::Colour (0xffe8ecf3));
-        editor.setColour (juce::CodeEditorComponent::lineNumberBackgroundId, juce::Colour (0xff141821));
-        editor.setColour (juce::CodeEditorComponent::lineNumberTextId, juce::Colour (0xff8a93a6));
-        editor.setColour (juce::CodeEditorComponent::highlightColourId, juce::Colour (0x4000d4ff));
+        editor.setColour (juce::CodeEditorComponent::backgroundColourId, mbstudio::ui::colours::recess);
+        editor.setColour (juce::CodeEditorComponent::defaultTextColourId, mbstudio::ui::colours::print);
+        editor.setColour (juce::CodeEditorComponent::lineNumberBackgroundId, mbstudio::ui::colours::chassisTop);
+        editor.setColour (juce::CodeEditorComponent::lineNumberTextId, mbstudio::ui::colours::printDim);
+        editor.setColour (juce::CodeEditorComponent::highlightColourId, mbstudio::ui::colours::ledBlue.withAlpha (.3f));
         editor.setColourScheme (tokeniser.getDefaultColourScheme());
         addAndMakeVisible (editor);
-        status.setFont (juce::Font (juce::FontOptions (12.f))); status.setJustificationType (juce::Justification::topLeft);
+        status.setFont (mbstudio::ui::Fonts::label (15.f)); status.setJustificationType (juce::Justification::topLeft);
         addAndMakeVisible (status);
         help.setText ("Scrivi mainImage(out vec4 o, in vec2 f). Disponibili: iTime, iResolution, iBass/iMid/iHigh/iLevel, iBeat, iPhase, iBar, iBPM, iParam1/2, "
                       "audioSpec(x), audioWave(x), waveMin/waveMax(x), audioPeak(x), specHist(x, age 0..63), iHistFrac, rot2, glow, hash, noise, hsv2rgb, rainbow. GLSL 1.50 (OpenGL 3.2).",
                       juce::dontSendNotification);
-        help.setFont (juce::Font (juce::FontOptions (11.f))); help.setColour (juce::Label::textColourId, juce::Colour (0xff8a93a6));
+        help.setFont (mbstudio::ui::Fonts::label (14.f)); help.setColour (juce::Label::textColourId, mbstudio::ui::colours::printDim);
         help.setMinimumHorizontalScale (1.f); addAndMakeVisible (help);
         setSize (900, 640);
     }
@@ -39,7 +40,7 @@ public:
         doc.replaceAllContent (proc.effectiveCode (d));
         doc.clearUndoHistory();
         status.setText (proc.customCode (d).isNotEmpty() ? "Shader personalizzato attivo su questo deck" : "Codice del preset: modificalo e premi Compila", juce::dontSendNotification);
-        status.setColour (juce::Label::textColourId, juce::Colour (0xff8a93a6));
+        status.setColour (juce::Label::textColourId, mbstudio::ui::colours::printDim);
     }
     void apply()
     {
@@ -67,8 +68,8 @@ public:
         {
             --pendingCheck;
             const auto err = proc.renderer.deckError (deck);
-            if (err.isNotEmpty()) { status.setText (err, juce::dontSendNotification); status.setColour (juce::Label::textColourId, juce::Colour (0xffff5470)); pendingCheck = 0; }
-            else if (pendingCheck == 0) { status.setText ("Compilato e applicato al deck " + juce::String (deck == 0 ? "A" : "B"), juce::dontSendNotification); status.setColour (juce::Label::textColourId, juce::Colour (0xff00d4ff)); }
+            if (err.isNotEmpty()) { status.setText (err, juce::dontSendNotification); status.setColour (juce::Label::textColourId, mbstudio::ui::colours::ledRed); pendingCheck = 0; }
+            else if (pendingCheck == 0) { status.setText ("Compilato e applicato al deck " + juce::String (deck == 0 ? "A" : "B"), juce::dontSendNotification); status.setColour (juce::Label::textColourId, mbstudio::ui::colours::ledGreen); }
         }
     }
     bool keyPressed (const juce::KeyPress& k) override
@@ -103,7 +104,7 @@ public:
 };
 
 ShaderEditorWindow::ShaderEditorWindow (MBVisualsProcessor& p)
-    : juce::DocumentWindow ("MBStudio91 Visuals - Editor shader", juce::Colour (0xff0b0d12), juce::DocumentWindow::closeButton | juce::DocumentWindow::minimiseButton)
+    : juce::DocumentWindow ("MBStudio91 Visuals - Editor shader", mbstudio::ui::colours::chassisBottom, juce::DocumentWindow::closeButton | juce::DocumentWindow::minimiseButton)
 {
     content = new Content (p);
     setContentOwned (content, true);

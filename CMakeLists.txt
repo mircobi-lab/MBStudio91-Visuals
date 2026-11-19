@@ -56,6 +56,9 @@ juce_add_plugin(MBStudio91Visuals
     HARDENED_RUNTIME_ENABLED TRUE
     HARDENED_RUNTIME_OPTIONS com.apple.security.device.audio-input)
 
+include(MBStudioUI/MBStudioUI.cmake)
+mbstudio_ui_add(MBStudio91Visuals)
+
 file(GLOB MBV_PRESETS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Shaders/Presets/*.glsl")
 juce_add_binary_data(MBVPresets SOURCES ${MBV_PRESETS})
 

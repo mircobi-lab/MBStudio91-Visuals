@@ -7,73 +7,35 @@ using namespace mbv;
 
 namespace
 {
-    const juce::Colour kBg (0xff0b0d12), kPanel (0xff141821), kLine (0xff252b38), kText (0xffe8ecf3), kDim (0xff8a93a6),
-                       kCyan (0xff00d4ff), kAmber (0xffffb547), kPink (0xffff5470);
-    juce::Font uiFont (float h, bool bold = false) { return juce::Font (juce::FontOptions (h, bold ? juce::Font::bold : juce::Font::plain)); }
+    namespace ui = mbstudio::ui;
+    namespace C = mbstudio::ui::colours;
+    const juce::Colour kBg = C::chassisBottom, kPanel = C::key, kLine = C::engrave, kText = C::print, kDim = C::printDim,
+                       kCyan = C::ledBlue, kAmber = C::print, kPink = C::ledGreen;
+    // Antonio è stretto: a parità di corpo serve un po' più di altezza; Bebas Neue per titoli e numeri
+    juce::Font uiFont (float h, bool bold = false) { return bold ? ui::Fonts::display (h * 1.3f) : ui::Fonts::label (h * 1.3f); }
 }
 
 //==============================================================================
-MBLookAndFeel::MBLookAndFeel()
-{
-    setColour (juce::ResizableWindow::backgroundColourId, kBg);
-    setColour (juce::Label::textColourId, kText);
-    setColour (juce::Slider::backgroundColourId, kLine);
-    setColour (juce::Slider::trackColourId, kCyan);
-    setColour (juce::Slider::thumbColourId, kText);
-    setColour (juce::ComboBox::backgroundColourId, kPanel);
-    setColour (juce::ComboBox::outlineColourId, kLine);
-    setColour (juce::ComboBox::textColourId, kText);
-    setColour (juce::ComboBox::arrowColourId, kDim);
-    setColour (juce::PopupMenu::backgroundColourId, kPanel);
-    setColour (juce::PopupMenu::textColourId, kText);
-    setColour (juce::PopupMenu::highlightedBackgroundColourId, kCyan.withAlpha (.25f));
-    setColour (juce::TextButton::buttonColourId, kPanel);
-    setColour (juce::TextButton::buttonOnColourId, kCyan.withAlpha (.35f));
-    setColour (juce::TextButton::textColourOffId, kText);
-    setColour (juce::TextButton::textColourOnId, kText);
-    setColour (juce::TextEditor::backgroundColourId, kBg);
-    setColour (juce::TextEditor::textColourId, kText);
-    setColour (juce::TextEditor::outlineColourId, kLine);
-    setColour (juce::ScrollBar::thumbColourId, kLine);
-    setColour (juce::TooltipWindow::backgroundColourId, kPanel);
-    setColour (juce::TooltipWindow::textColourId, kText);
-}
-
-void MBLookAndFeel::drawLinearSlider (juce::Graphics& g, int x, int y, int w, int h, float pos, float, float, juce::Slider::SliderStyle style, juce::Slider& s)
-{
-    const auto track = s.findColour (juce::Slider::trackColourId);
-    if (style == juce::Slider::LinearHorizontal || style == juce::Slider::LinearBar)
-    {
-        const float cy = (float) y + (float) h * .5f;
-        g.setColour (kLine); g.fillRoundedRectangle ((float) x, cy - 2, (float) w, 4.f, 2.f);
-        const double mn = s.getMinimum(), mx = s.getMaximum();
-        const bool bipolar = mn < 0 && mx > 0;
-        const float zero = bipolar ? (float) (x + w * (-mn / (mx - mn))) : (float) x;
-        g.setColour (track); g.fillRoundedRectangle (juce::jmin (zero, pos), cy - 2, std::abs (pos - zero), 4.f, 2.f);
-        g.setColour (s.findColour (juce::Slider::thumbColourId)); g.fillEllipse (pos - 6, cy - 6, 12, 12);
-        g.setColour (kBg); g.drawEllipse (pos - 6, cy - 6, 12, 12, 1.f);
-    }
-    else
-    {
-        const float cx = (float) x + (float) w * .5f;
-        g.setColour (kLine); g.fillRoundedRectangle (cx - 2, (float) y, 4.f, (float) h, 2.f);
-        g.setColour (track); g.fillRoundedRectangle (cx - 2, pos, 4.f, (float) (y + h) - pos, 2.f);
-        g.setColour (s.findColour (juce::Slider::thumbColourId)); g.fillEllipse (cx - 6, pos - 6, 12, 12);
-    }
-}
-juce::Font MBLookAndFeel::getLabelFont (juce::Label&) { return uiFont (12.f); }
-juce::Font MBLookAndFeel::getComboBoxFont (juce::ComboBox&) { return uiFont (12.f); }
-juce::Font MBLookAndFeel::getTextButtonFont (juce::TextButton&, int) { return uiFont (12.f, true); }
-
 void MBVisualsEditor::Meter::paint (juce::Graphics& g)
 {
-    auto r = getLocalBounds().toFloat();
-    g.setColour (kLine); g.fillRoundedRectangle (r, 2.f);
-    g.setColour (c); g.fillRoundedRectangle (r.withWidth (r.getWidth() * juce::jlimit (0.f, 1.f, v)), 2.f);
+    // barra di LED a segmenti, come gli indicatori di un mixer hardware
+    const auto r = getLocalBounds().toFloat();
+    const int n = juce::jmax (6, (int) (r.getWidth() / 6.f));
+    const float gap = 2.f, sw = (r.getWidth() - gap * (float) (n - 1)) / (float) n, lv = juce::jlimit (0.f, 1.f, v);
+    for (int i = 0; i < n; ++i)
+    {
+        const float t = (float) (i + 1) / (float) n;
+        const juce::Colour col = i == n - 1 ? C::ledRed : t > .75f ? C::ledAmber : c;
+        const juce::Rectangle<float> seg (r.getX() + (float) i * (sw + gap), r.getY(), sw, r.getHeight());
+        const bool on = lv >= t - .5f / (float) n;
+        g.setColour (on ? col : C::ledOff); g.fillRoundedRectangle (seg, 1.f);
+        if (on) { g.setColour (juce::Colours::white.withAlpha (.25f)); g.fillRect (seg.withHeight (1.f).translated (0, 1.f).reduced (1.f, 0)); }
+    }
 }
 void MBVisualsEditor::Dot::paint (juce::Graphics& g)
 {
-    g.setColour (v > .4f ? kPink : kLine); g.fillEllipse (getLocalBounds().toFloat().reduced (2));
+    const auto r = getLocalBounds().toFloat();
+    ui::paintLed (g, r.getCentre(), juce::jmin (r.getWidth(), r.getHeight()) * .24f, C::ledRed, v);
 }
 
 //==============================================================================
@@ -81,15 +43,18 @@ MBVisualsEditor::MBVisualsEditor (MBVisualsProcessor& p) : AudioProcessorEditor 
 {
     setLookAndFeel (&lnf);
     setResizable (true, true);
-    setResizeLimits (980, 640, 3840, 2400);
-    setSize (1180, 780);
+    setResizeLimits (1100, 680, 3840, 2400);
+    setSize (1280, 820);
     setWantsKeyboardFocus (true);
 
     auto label = [this] (juce::Label& l, const juce::String& t, float size, juce::Colour c, juce::Justification j = juce::Justification::centredLeft)
-    { l.setText (t, juce::dontSendNotification); l.setFont (uiFont (size, size > 13)); l.setColour (juce::Label::textColourId, c); l.setJustificationType (j); addAndMakeVisible (l); };
+    {   // etichette piccole: maiuscolo bianco, come stampate sul pannello
+        const bool printed = size <= 11.f && &l != &bpmInfo && &l != &fpsLabel;
+        l.setText (printed ? t.toUpperCase() : t, juce::dontSendNotification); l.setFont (uiFont (size, size > 13));
+        l.setColour (juce::Label::textColourId, printed && c == kDim ? kText : c); l.setJustificationType (j); addAndMakeVisible (l); };
 
-    label (title, "MBStudio91 Visuals", 16.f, kText);
-    label (bpmLabel, "120.0", 22.f, kCyan, juce::Justification::centred);
+    label (title, "", 16.f, kText); title.setInterceptsMouseClicks (false, false);
+    label (bpmLabel, "120.0", 22.f, kText, juce::Justification::centred); bpmLabel.setFont (ui::Fonts::thin (34.f));
     label (srcLabel, "INT", 11.f, kDim, juce::Justification::centred);
     label (fpsLabel, "", 11.f, kDim, juce::Justification::centredRight);
     label (bpmInfo, "", 10.f, kDim);
@@ -103,7 +68,7 @@ MBVisualsEditor::MBVisualsEditor (MBVisualsProcessor& p) : AudioProcessorEditor 
     downBtn.setTooltip ("Primo battito della battuta (tasto .)"); downBtn.onClick = [this] { proc.engine.downbeat(); };
     addAndMakeVisible (tapBtn); addAndMakeVisible (downBtn);
 
-    const juce::Colour mc[4] = { kText, kCyan, kAmber, kPink }; const char* mn[4] = { "Liv", "Bassi", "Medi", "Alti" };
+    const juce::Colour mc[4] = { C::ledGreen, C::ledGreen, C::ledGreen, C::ledGreen }; const char* mn[4] = { "LIV", "BASSI", "MEDI", "ALTI" };
     Meter* ms[4] = { &mLevel, &mBass, &mMid, &mHigh };
     for (int i = 0; i < 4; ++i) { ms[i]->c = mc[i]; addAndMakeVisible (*ms[i]); label (mLabels[i], mn[i], 10.f, kDim); }
     addAndMakeVisible (onsetDot);
@@ -112,6 +77,7 @@ MBVisualsEditor::MBVisualsEditor (MBVisualsProcessor& p) : AudioProcessorEditor 
     projBtn.setTooltip ("Apre/chiude l'uscita a schermo intero sullo schermo scelto (F, o doppio clic sull'immagine). Esc per chiudere");
     projBtn.onClick = [this] { proc.showProjector (proc.projectorOpen() ? -1 : juce::jmax (0, displayBox.getSelectedId() - 1)); };
     addAndMakeVisible (projBtn);
+    projBtn.getProperties().set ("led", true); learnBtn.getProperties().set ("led", true); learnBtn.getProperties().set ("ledColour", C::ledAmber.toString());
     lightsBtn.setTooltip ("Uscita luci: LED wall, barre, fari e strobo via Art-Net / sACN, OSC per QLC+");
     lightsBtn.onClick = [this] { showLights(); };
     addAndMakeVisible (lightsBtn);
@@ -145,13 +111,13 @@ MBVisualsEditor::MBVisualsEditor (MBVisualsProcessor& p) : AudioProcessorEditor 
     setupDeck (0); setupDeck (1);
 
     // mix
-    label (mixTitle, "MIX", 12.f, kAmber);
+    label (mixTitle, "", 12.f, kAmber);
     xf.setSliderStyle (juce::Slider::LinearHorizontal); xf.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
     xf.setColour (juce::Slider::trackColourId, kAmber); xf.setTooltip ("Crossfader A <-> B. I pulsanti A e B fanno la transizione nel tempo impostato");
     xf.onDragStart = [this] { proc.engine.stopXf(); };
     xfAtt = std::make_unique<Apvts::SliderAttachment> (proc.apvts, ids::xf, xf); addAndMakeVisible (xf);
     goA.onClick = [this] { proc.engine.goTo (0); }; goB.onClick = [this] { proc.engine.goTo (1); };
-    goA.setColour (juce::TextButton::buttonOnColourId, kAmber.withAlpha (.5f)); goB.setColour (juce::TextButton::buttonOnColourId, kAmber.withAlpha (.5f));
+    for (auto* b : { &goA, &goB }) { b->getProperties().set ("led", true); b->getProperties().set ("ledColour", C::ledBlue.toString()); }
     addAndMakeVisible (goA); addAndMakeVisible (goB);
     makeKnob (xfTime, ids::xfTime, "Transizione", [] (double v) { return juce::String (v, 1) + " s"; });
     makeKnob (feedback, ids::feedback, "Scia");
@@ -189,6 +155,8 @@ MBVisualsEditor::MBVisualsEditor (MBVisualsProcessor& p) : AudioProcessorEditor 
 
 MBVisualsEditor::~MBVisualsEditor()
 {
+    if (shaderWin) shaderWin->setLookAndFeel (nullptr);
+    if (lightsWin) lightsWin->setLookAndFeel (nullptr);
     shaderWin.reset();
     lightsWin.reset();
     if (stageHere) { proc.renderer.detach(); stageHolder.removeChildComponent (&proc.stage()); }
@@ -207,8 +175,8 @@ void MBVisualsEditor::makeKnob (Knob& k, const juce::String& id, const juce::Str
         k.slider.setTooltip (p->getName (40) + " - doppio clic: valore predefinito - clic destro: MIDI");
     }
     k.att = std::make_unique<Apvts::SliderAttachment> (proc.apvts, id, k.slider);
-    k.name.setText (text, juce::dontSendNotification); k.name.setFont (uiFont (10.f)); k.name.setColour (juce::Label::textColourId, kDim);
-    k.value.setFont (uiFont (10.f)); k.value.setColour (juce::Label::textColourId, kText); k.value.setJustificationType (juce::Justification::centredRight);
+    k.name.setText (text.toUpperCase(), juce::dontSendNotification); k.name.setFont (uiFont (10.f)); k.name.setColour (juce::Label::textColourId, kText);
+    k.value.setFont (uiFont (10.f)); k.value.setColour (juce::Label::textColourId, kDim); k.value.setJustificationType (juce::Justification::centredRight);
     auto upd = [&k, fmt] { const double v = k.slider.getValue(); k.value.setText (fmt ? fmt (v) : juce::String (v, 2), juce::dontSendNotification); };
     k.slider.onValueChange = upd; upd();
     k.slider.setPopupMenuEnabled (false);
@@ -238,7 +206,7 @@ void MBVisualsEditor::makeToggle (juce::TextButton& b, std::unique_ptr<Apvts::Bu
 void MBVisualsEditor::setupDeck (int i)
 {
     auto& d = decks[i];
-    d.title.setText (i == 0 ? "DECK A" : "DECK B", juce::dontSendNotification); d.title.setFont (uiFont (12.f, true));
+    d.title.setText ({}, juce::dontSendNotification); d.title.setFont (uiFont (12.f, true));
     d.title.setColour (juce::Label::textColourId, i == 0 ? kCyan : kPink); addAndMakeVisible (d.title);
     juce::StringArray names = proc.library.names();
     while (names.size() < maxPresets) names.add ("-");
@@ -274,14 +242,14 @@ void MBVisualsEditor::setupDeck (int i)
     d.edit.setTooltip ("Apre l'editor dello shader di questo deck (GLSL, mainImage)");
     d.edit.onClick = [this, i] { openShaderEditor (i); };
     addAndMakeVisible (d.edit);
-    d.error.setFont (uiFont (10.f)); d.error.setColour (juce::Label::textColourId, kPink); d.error.setJustificationType (juce::Justification::topLeft);
+    d.error.setFont (uiFont (10.f)); d.error.setColour (juce::Label::textColourId, C::ledRed); d.error.setJustificationType (juce::Justification::topLeft);
     addAndMakeVisible (d.error);
 }
 
 //==============================================================================
 void MBVisualsEditor::showLights()
 {
-    if (lightsWin == nullptr) lightsWin = std::make_unique<LightsWindow> (proc.lights);
+    if (lightsWin == nullptr) { lightsWin = std::make_unique<LightsWindow> (proc.lights); lightsWin->setLookAndFeel (&lnf); }
     else lightsWin->refreshFromEngine();
     lightsWin->setVisible (true);
     lightsWin->toFront (true);
@@ -320,7 +288,7 @@ void MBVisualsEditor::refreshDisplays()
 
 void MBVisualsEditor::openShaderEditor (int deck)
 {
-    if (shaderWin == nullptr) shaderWin = std::make_unique<ShaderEditorWindow> (proc);
+    if (shaderWin == nullptr) { shaderWin = std::make_unique<ShaderEditorWindow> (proc); shaderWin->setLookAndFeel (&lnf); }
     shaderWin->showDeck (deck);
 }
 
@@ -365,16 +333,20 @@ void MBVisualsEditor::timerCallback()
     static const char* src[] = { "HOST", "AUDIO", "INT", "TAP" };
     const int s = juce::jlimit (0, 3, e.uiSource.load());
     srcLabel.setText (src[s], juce::dontSendNotification);
-    srcLabel.setColour (juce::Label::textColourId, s == 0 ? kAmber : s == 1 ? kCyan : kDim);
+    srcLabel.setColour (juce::Label::textColourId, s == 0 ? C::ledBlue : s == 1 ? C::ledGreen : kDim);
     const float fps = proc.renderer.fps();
     fpsLabel.setText (fps > 0 ? juce::String ((int) std::round (fps)) + " fps - deck " + juce::String ((int) std::round (e.qualityScale() * 100)) + "%" : "", juce::dontSendNotification);
-    fpsLabel.setColour (juce::Label::textColourId, fps > 0 && fps < 30 ? kAmber : kDim);
+    fpsLabel.setColour (juce::Label::textColourId, fps > 0 && fps < 30 ? C::ledAmber : kDim);
     bpmInfo.setText (s == 1 ? e.bpmInfo : juce::String(), juce::dontSendNotification);
     mLevel.v = e.uiLevel; mBass.v = e.uiBass; mMid.v = e.uiMid; mHigh.v = e.uiHigh; onsetDot.v = e.uiOnset;
     for (auto* m : { &mLevel, &mBass, &mMid, &mHigh }) m->repaint();
     onsetDot.repaint();
     const bool running = e.uiXfRunning.load(); const int tgt = e.uiXfTarget.load();
     goA.setToggleState (running && tgt == 0, juce::dontSendNotification); goB.setToggleState (running && tgt == 1, juce::dontSendNotification);
+    {
+        const float xfv = proc.apvts.getRawParameterValue (ids::xf)->load();
+        if (std::abs (xfv - lastXfShown) > .01f) { lastXfShown = xfv; repaint (decks[0].title.getBounds().expanded (4)); repaint (decks[1].title.getBounds().expanded (4)); }
+    }
     projBtn.setToggleState (proc.projectorOpen(), juce::dontSendNotification);
     projBtn.setButtonText (proc.projectorOpen() ? "Chiudi proiettore" : "Proiettore");
     learnBtn.setToggleState (proc.isLearning(), juce::dontSendNotification);
@@ -393,40 +365,62 @@ void MBVisualsEditor::timerCallback()
 //==============================================================================
 void MBVisualsEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (kBg);
+    ui::paintChassis (g, getLocalBounds());
+    // logo MBSTUDIO91 stampato sul telaio + nome del prodotto
+    ui::paintBrand (g, title.getBounds().toFloat().reduced (0, 6), "Visuals");
+    // schermo incassato, come la tastiera nel suo vano
+    ui::paintRecess (g, stageHolder.getBounds().toFloat().expanded (6), 5.f);
+    // sezioni separate da linee incise, titoli su chip invertiti con il LED del deck
     auto r = getLocalBounds().reduced (10);
     r.removeFromTop (70);
     auto panels = r.removeFromBottom (300);
     const int side = juce::jmax (260, panels.getWidth() * 3 / 10);
-    juce::Rectangle<int> rects[3] = { panels.removeFromLeft (side).reduced (4), {}, panels.removeFromRight (side).reduced (4) };
-    rects[1] = panels.reduced (4);
-    for (auto& rc : rects) { g.setColour (kPanel); g.fillRoundedRectangle (rc.toFloat(), 8.f); g.setColour (kLine); g.drawRoundedRectangle (rc.toFloat(), 8.f, 1.f); }
-    g.setColour (kLine); g.drawRoundedRectangle (stageHolder.getBounds().toFloat().expanded (1), 4.f, 1.f);
+    const float top = (float) panels.getY() - 2.f, bottom = (float) panels.getBottom() - 6.f;
+    ui::paintEngravedLine (g, { (float) panels.getX() + 4.f, top }, { (float) panels.getRight() - 4.f, top });
+    ui::paintEngravedLine (g, { (float) (panels.getX() + side), top + 10.f }, { (float) (panels.getX() + side), bottom });
+    ui::paintEngravedLine (g, { (float) (panels.getRight() - side), top + 10.f }, { (float) (panels.getRight() - side), bottom });
+    auto chip = [&g] (juce::Rectangle<int> at, const juce::String& text, juce::Colour led, float level)
+    {
+        const float h = 17.f, w = ui::chipWidth (text, h);
+        const juce::Rectangle<float> c ((float) at.getX() + 14.f, (float) at.getCentreY() - h * .5f, w, h);
+        ui::paintChip (g, c, text);
+        if (led != juce::Colour()) ui::paintLed (g, { (float) at.getX() + 5.f, c.getCentreY() }, 3.2f, led, level);
+    };
+    const float xfv = proc.apvts.getRawParameterValue (ids::xf)->load();     // il LED del deck dice quanto è "in onda"
+    chip (decks[0].title.getBounds(), "Deck A", C::ledBlue, 1.f - xfv);
+    chip (decks[1].title.getBounds(), "Deck B", C::ledGreen, xfv);
+    chip (mixTitle.getBounds().withWidth (80), "Mix", {}, 0.f);
+    // marchio impresso nella plastica, in basso a destra
+    ui::paintLogo (g, juce::Rectangle<float> ((float) getWidth() - 200.f, (float) getHeight() - 26.f, 186.f, 20.f), false, ui::Imprint::debossed, juce::Justification::right);
 }
 
 void MBVisualsEditor::resized()
 {
     auto r = getLocalBounds().reduced (10);
-    auto top = r.removeFromTop (34);
-    title.setBounds (top.removeFromLeft (150));
-    bpmLabel.setBounds (top.removeFromLeft (70)); srcLabel.setBounds (top.removeFromLeft (46));
-    bpmSlider.setBounds (top.removeFromLeft (120).reduced (0, 4));
-    clockBox.setBounds (top.removeFromLeft (140).reduced (4, 5));
-    tapBtn.setBounds (top.removeFromLeft (50).reduced (2, 5)); downBtn.setBounds (top.removeFromLeft (34).reduced (2, 5));
+    auto head = r.removeFromTop (64);
+    // blocco del marchio a sinistra, alto due righe
+    title.setBounds (head.removeFromLeft (270).withSizeKeepingCentre (270, 34).translated (0, 0));
+    head.removeFromLeft (10);
+    auto top = head.removeFromTop (34);
+    bpmLabel.setBounds (top.removeFromLeft (78)); srcLabel.setBounds (top.removeFromLeft (52).reduced (2, 8));
+    bpmSlider.setBounds (top.removeFromLeft (110).reduced (0, 2));
+    clockBox.setBounds (top.removeFromLeft (136).reduced (4, 5));
+    tapBtn.setBounds (top.removeFromLeft (50).reduced (2, 3)); downBtn.setBounds (top.removeFromLeft (36).reduced (2, 3));
     top.removeFromLeft (10);
     Meter* ms[4] = { &mLevel, &mBass, &mMid, &mHigh };
-    for (int i = 0; i < 4; ++i) { auto c = top.removeFromLeft (92); mLabels[i].setBounds (c.removeFromLeft (34)); ms[i]->setBounds (c.reduced (0, 12)); }
-    onsetDot.setBounds (top.removeFromLeft (22).reduced (0, 9));
+    const int mw = juce::jlimit (64, 100, (top.getWidth() - 22 - 120) / 4);
+    for (int i = 0; i < 4; ++i) { auto c = top.removeFromLeft (mw); mLabels[i].setBounds (c.removeFromLeft (34)); ms[i]->setBounds (c.reduced (2, 13)); }
+    onsetDot.setBounds (top.removeFromLeft (22).reduced (0, 6));
     bpmInfo.setBounds (top);
-    auto row2 = r.removeFromTop (30);
-    helpBtn.setBounds (row2.removeFromRight (26).reduced (0, 3)); row2.removeFromRight (6);
-    fpsLabel.setBounds (row2.removeFromRight (130));
-    midiBtn.setBounds (row2.removeFromRight (64).reduced (0, 3)); row2.removeFromRight (4);
-    learnBtn.setBounds (row2.removeFromRight (96).reduced (0, 3)); row2.removeFromRight (12);
-    resBox.setBounds (row2.removeFromRight (140).reduced (0, 3)); row2.removeFromRight (4);
-    projBtn.setBounds (row2.removeFromRight (130).reduced (0, 3)); row2.removeFromRight (4);
-    lightsBtn.setBounds (row2.removeFromRight (80).reduced (0, 3)); row2.removeFromRight (8);
-    displayBox.setBounds (row2.removeFromRight (210).reduced (0, 3));
+    auto row2 = head.removeFromTop (30);
+    helpBtn.setBounds (row2.removeFromRight (28).reduced (0, 1)); row2.removeFromRight (6);
+    fpsLabel.setBounds (row2.removeFromRight (112));
+    midiBtn.setBounds (row2.removeFromRight (60).reduced (0, 1)); row2.removeFromRight (4);
+    learnBtn.setBounds (row2.removeFromRight (100).reduced (0, 1)); row2.removeFromRight (12);
+    resBox.setBounds (row2.removeFromRight (124).reduced (0, 3)); row2.removeFromRight (4);
+    projBtn.setBounds (row2.removeFromRight (116).reduced (0, 1)); row2.removeFromRight (4);
+    lightsBtn.setBounds (row2.removeFromRight (70).reduced (0, 1)); row2.removeFromRight (8);
+    displayBox.setBounds (row2.removeFromRight (juce::jmin (200, row2.getWidth())).reduced (0, 3));
     r.removeFromTop (6);
     auto panels = r.removeFromBottom (300);
     r.removeFromBottom (6);

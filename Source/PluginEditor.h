@@ -5,15 +5,10 @@
 class ShaderEditorWindow;
 class LightsWindow;
 
-class MBLookAndFeel : public juce::LookAndFeel_V4
-{
-public:
-    MBLookAndFeel();
-    void drawLinearSlider (juce::Graphics&, int x, int y, int w, int h, float pos, float min, float max, juce::Slider::SliderStyle, juce::Slider&) override;
-    juce::Font getLabelFont (juce::Label&) override;
-    juce::Font getComboBoxFont (juce::ComboBox&) override;
-    juce::Font getTextButtonFont (juce::TextButton&, int) override;
-};
+#include "MBStudioLookAndFeel.h"
+
+// Aspetto "hardware" MBStudio (kit condiviso in MBStudioUI/)
+using MBLookAndFeel = mbstudio::ui::HardwareLookAndFeel;
 
 class MBVisualsEditor : public juce::AudioProcessorEditor, private juce::Timer
 {
@@ -90,6 +85,7 @@ private:
     std::unique_ptr<ShaderEditorWindow> shaderWin;
     std::unique_ptr<LightsWindow> lightsWin;
     bool stageHere = false, strobeKeyHeld = false;
+    float lastXfShown = -1.f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MBVisualsEditor)
 };
