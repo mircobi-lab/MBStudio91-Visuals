@@ -1,0 +1,114 @@
+/* ===== MBVX nello stile hardware MBStudio (kit MBStudioUI/web) ===== */
+:root{
+  --bg:var(--chassis-bottom); --panel:#101112; --panel-2:var(--recess); --line:#000; --line-2:var(--key-edge);
+  --fg:var(--print); --muted:var(--print-dim); --amber:var(--led-amber); --amber-2:var(--led-amber);
+  --deck-a:var(--led-blue); --deck-b:var(--led-green); --ok:var(--led-green); --err:var(--led-red);
+  --ui:'Antonio','Arial Narrow',sans-serif; --mono:'Antonio','Arial Narrow',sans-serif;
+}
+body.mbs{font:300 15px/1.45 var(--f-label)}
+body.mbs::before,body.mbs::after{display:none}
+body.mbs button:hover{transform:none;color:var(--print)}
+body.mbs button:focus-visible,body.mbs select:focus-visible,body.mbs input:focus-visible,body.mbs textarea:focus-visible{outline:2px solid var(--print)}
+/* intestazione */
+.top{background:none;border-bottom:1px solid #000;box-shadow:0 1px 0 var(--engrave)}
+.top::after{display:none}
+.brand{gap:12px}
+.brand::before{display:none}
+.brand .mbs-logo{height:26px}
+.brand-sub{font:300 12px/1 var(--f-label);letter-spacing:.12em;text-transform:uppercase;color:var(--print-dim)}
+.lbl{font:300 12px/1.2 var(--f-label);letter-spacing:.12em;color:var(--print)}
+.num{font-family:var(--f-label)}
+.src{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:300 12px/1 var(--f-label);letter-spacing:.1em;color:var(--print);
+  background:var(--recess);border:1px solid #000;border-bottom-color:var(--recess-edge);border-radius:3px;box-shadow:inset 0 2px 4px #000;padding:6px 9px 5px}
+.src::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--led-off);flex:none}
+.src[data-s="AUDIO"],.src[data-s="LINK"],.src[data-s="TAP"]{color:var(--print);background:var(--recess);border-color:#000;border-bottom-color:var(--recess-edge);box-shadow:inset 0 2px 4px #000}
+.src[data-s="AUDIO"]::before{background:var(--led-green);box-shadow:0 0 6px var(--led-green)}
+.src[data-s="LINK"]::before{background:var(--led-amber);box-shadow:0 0 6px var(--led-amber)}
+.src[data-s="TAP"]::before{background:var(--led-blue);box-shadow:0 0 6px var(--led-blue)}
+#fps::before{display:none}
+#fps.warn{color:var(--led-amber);border-color:#000}
+#bpm{font:100 38px/1 var(--f-label);color:var(--print);border:0;border-bottom:1px solid var(--recess-edge);width:104px;background:none;box-shadow:none}
+#bpm:focus{border-bottom-color:var(--print)}
+.beats i{width:10px;height:10px;background:var(--led-off);border:0;box-shadow:inset 0 1px 1px rgba(0,0,0,.8)}
+.beats i.hit{background:var(--led-green);border:0;box-shadow:0 0 8px var(--led-green);transform:none}
+.beats i.hit.one{background:var(--led-red);box-shadow:0 0 9px var(--led-red)}
+.meter{width:100px;height:10px;border-radius:2px;background:var(--recess);border:1px solid #000;border-bottom-color:var(--recess-edge)}
+.meter>div{background:linear-gradient(90deg,var(--led-green) 0 70%,var(--led-amber) 70% 90%,var(--led-red) 90%);border-radius:0;
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 7px,transparent 7px 9px);mask:repeating-linear-gradient(90deg,#000 0 7px,transparent 7px 9px)}
+/* pannelli: sezioni del frontale, non card */
+.panel{background:none;border:0;border-top:1px solid #000;box-shadow:0 1px 0 var(--engrave) inset;border-radius:0;padding:14px 4px 6px}
+.deck::before,.master::before{display:none}
+.deck:hover{border-color:#000}
+.master{background:none;border-color:#000;box-shadow:0 1px 0 var(--engrave) inset}
+.deck-head .tag{display:inline-flex;align-items:center;gap:7px;background:var(--chip);color:var(--chip-text);border:0;border-radius:2px;
+  font:400 18px/1 var(--f-display);letter-spacing:.09em;text-shadow:none;padding:4px 8px 2px}
+.deck-head .tag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c)}
+.thumb,.canvas-wrap{background:#000;border:1px solid #000;border-bottom-color:var(--recess-edge);border-right-color:var(--recess-edge);border-radius:3px;
+  box-shadow:inset 0 2px 8px #000,0 0 0 4px var(--recess)}
+.canvas-wrap{margin:4px}
+.fs-overlay{border-radius:3px;background:rgba(0,0,0,.6)}
+.media-name,.ctl output,.xf-auto output,.status{font-family:var(--f-label);font-size:13px;letter-spacing:.04em}
+.ctl output{color:var(--print-dim)}
+.spin{border-top:1px solid #000;box-shadow:0 1px 0 var(--engrave) inset}
+.status{color:var(--led-green)}
+.status.err{color:var(--led-red)}
+textarea.code{background:var(--recess);border:1px solid #000;border-bottom-color:var(--recess-edge);border-radius:3px;box-shadow:inset 0 2px 5px #000;
+  font:12px/1.6 ui-monospace,Menlo,Consolas,monospace;color:var(--print)}
+/* crossfader e tasti A/B */
+body.mbs .xf .xf-go{font:400 22px/1 var(--f-display);min-width:58px;padding:8px 10px 6px 24px;color:var(--print);
+  background:linear-gradient(var(--key-top),var(--key));border:1px solid var(--key-edge);border-bottom-color:#000;position:relative}
+body.mbs .xf .xf-go::before{content:"";position:absolute;left:9px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--led-off)}
+body.mbs .xf .xf-go[data-to="0"]::before{background:color-mix(in srgb,var(--led-blue) 35%,var(--led-off))}
+body.mbs .xf .xf-go[data-to="1"]::before{background:color-mix(in srgb,var(--led-green) 35%,var(--led-off))}
+body.mbs .xf .xf-go.running[data-to="0"]::before{background:var(--led-blue);box-shadow:0 0 8px var(--led-blue)}
+body.mbs .xf .xf-go.running[data-to="1"]::before{background:var(--led-green);box-shadow:0 0 8px var(--led-green)}
+body.mbs #xf{height:34px}
+body.mbs #xf::-webkit-slider-runnable-track{height:8px}
+body.mbs #xf::-webkit-slider-thumb{width:18px;height:30px;margin-top:-12px;border-radius:2px;
+  background:linear-gradient(90deg,#1b1c1e 0 44%,var(--print) 44% 56%,#1b1c1e 56%);border:1px solid #3a3c40;box-shadow:0 3px 4px #000}
+body.mbs #xf::-moz-range-thumb{width:16px;height:28px;border-radius:2px;
+  background:linear-gradient(90deg,#1b1c1e 0 44%,var(--print) 44% 56%,#1b1c1e 56%);border:1px solid #3a3c40;box-shadow:0 3px 4px #000}
+/* palette */
+.palette-bar,.palette-custom{background:none;border:0;border-top:1px solid #000;box-shadow:0 1px 0 var(--engrave) inset;border-radius:0;padding:10px 0 2px}
+body.mbs .pal-btn{position:relative;padding:7px 9px 5px 21px;font-size:14px;min-width:0}
+body.mbs .pal-btn::before{content:"";position:absolute;left:8px;top:50%;width:7px;height:7px;margin-top:-4px;border-radius:50%;background:var(--led-off);box-shadow:inset 0 1px 1px rgba(0,0,0,.8)}
+body.mbs .pal-btn.active,body.mbs .pal-btn[data-pal].active{background:linear-gradient(var(--key-top),var(--key));color:var(--print);border-color:var(--key-edge);border-bottom-color:#000;text-shadow:none;
+  box-shadow:0 2px 0 #000,inset 0 1px 0 rgba(255,255,255,.07)}
+body.mbs .pal-btn.active::before{background:var(--led-green);box-shadow:0 0 6px var(--led-green)}
+.color-pick{border-radius:3px;border:1px solid #000;box-shadow:0 0 0 1px var(--key-edge)}
+.color-pick .idx{font-family:var(--f-label)}
+/* bande audio come barre di LED */
+.band .bar{height:8px;border-radius:0;background:var(--recess);border:1px solid #000;border-bottom-color:var(--recess-edge)}
+.band .bar>div{background:linear-gradient(90deg,var(--led-green) 0 70%,var(--led-amber) 70% 90%,var(--led-red) 90%);border-radius:0;
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 6px,transparent 6px 8px);mask:repeating-linear-gradient(90deg,#000 0 6px,transparent 6px 8px)}
+.onset{background:var(--led-off);border:0}
+.onset.hit{background:var(--led-red);box-shadow:0 0 9px var(--led-red);transform:none}
+/* guida, avvisi */
+.help{background:none;border:0;border-top:1px solid #000;box-shadow:0 1px 0 var(--engrave) inset;border-radius:0}
+.help summary{font:400 18px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase}
+.help summary::before{background:var(--led-off);box-shadow:none}
+.help[open] summary::before{background:var(--led-green);box-shadow:0 0 6px var(--led-green)}
+.help h4{font:400 16px var(--f-display);letter-spacing:.1em}
+.help kbd{font:400 13px var(--f-display);border-radius:2px;background:linear-gradient(var(--key-top),var(--key));border-color:var(--key-edge)}
+#toast{background:var(--chip)!important;color:var(--chip-text)!important;border:0!important;border-radius:2px!important;font:400 15px/1.35 var(--f-label)!important;letter-spacing:.04em;backdrop-filter:none!important;box-shadow:0 6px 20px #000}
+#tip{background:var(--chip);color:var(--chip-text);border:0;border-radius:2px;font:400 13px/1.35 var(--f-label)}
+#learnBanner{background:var(--chip);color:var(--chip-text);border-radius:2px;font:400 17px/1 var(--f-display);letter-spacing:.08em;padding:8px 14px 6px}
+#learnBanner::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--led-amber);box-shadow:0 0 6px var(--led-amber);margin-right:8px;vertical-align:1px}
+body.learning [data-ctl]{outline-color:rgba(255,176,32,.55)}
+/* cassetto luci */
+.lights-drawer{background:linear-gradient(var(--chassis-top),var(--chassis-bottom) 500px) var(--chassis-bottom);border-left:1px solid #000;box-shadow:-1px 0 0 var(--engrave),-24px 0 60px rgba(0,0,0,.6)}
+.lights-drawer h4{font:400 16px var(--f-display);letter-spacing:.1em;color:var(--print)}
+.lt-head b{font:400 22px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase}
+.lights-drawer input[type=text],.lights-drawer input[type=number]{font:300 13px var(--f-label);background:var(--recess)}
+.lt-status{font:300 13px/1.5 var(--f-label);background:var(--recess);border:1px solid #000;border-bottom-color:var(--recess-edge);border-radius:3px}
+.fx-card{background:none;border:0;border-top:1px solid #000;box-shadow:0 1px 0 var(--engrave) inset;border-radius:0}
+.fx-card.sel{box-shadow:0 1px 0 var(--engrave) inset,inset 3px 0 0 var(--led-green)}
+.fx-card .fx-top .idx{font:400 16px var(--f-display);color:var(--print)}
+.lt-grid label,.fx-info{font:300 11px var(--f-label);letter-spacing:.06em;text-transform:uppercase;color:var(--print)}
+.lz{border-color:var(--led-amber);font:400 12px var(--f-display);letter-spacing:.06em}
+.lz .lz-h{background:var(--led-amber)}
+body.mbs #lightsBtn.on{background:linear-gradient(var(--key-top),var(--key));color:var(--print);border-color:var(--key-edge)}
+.brand .mbs-badge{font:400 22px/1 var(--f-display);letter-spacing:.12em;color:var(--print);background:none;border:1.5px solid var(--print);border-radius:3px;padding:4px 8px 2px}
+.brand .brand-sub{background:none;border:0;padding:0;font-size:12px}
+body.mbs textarea.code{font:12px/1.6 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:0}
+.mbvx-foot{display:flex;justify-content:flex-end;padding:0 max(20px,env(safe-area-inset-right,0px)) 28px}

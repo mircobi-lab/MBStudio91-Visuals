@@ -30,8 +30,7 @@ must('<meta name="viewport" content="width=device-width, initial-scale=1, viewpo
      '<meta name="theme-color" content="#060709">\n'
      f'<link rel="apple-touch-icon" href="data:image/png;base64,{icon}">')
 must('<title>MBVX — Visual Mixer</title>', '<title>MBVX per iPhone</title>')
-must('<div class="brand"><b>MBVX</b><span>visual mixer · djay Pro</span></div>',
-     '<div class="brand"><b>MBVX</b><span>iPhone</span></div>')
+must('<span class="brand-sub">visual mixer · djay Pro</span>', '<span class="brand-sub">iPhone</span>')
 must('<button id="fsBtn" title="Schermo intero (F)">Proietta</button>', '<button id="fsBtn" class="live-btn">Live</button>')
 must('<option value="">Ingresso audio predefinito</option>', '<option value="">Microfono</option>')
 must('<button id="audioBtn">Avvia audio</button>', '<button id="audioBtn" class="audio-btn">Avvia microfono</button><button id="trackBtn" class="audio-btn" title="Riproduce un brano dal telefono e lo analizza">Brano</button><input id="trackIn" type="file" accept="audio/*" hidden>')
@@ -57,15 +56,18 @@ body{overflow-x:hidden;padding-bottom:calc(64px + env(safe-area-inset-bottom,0px
 body::after{display:none}
 .top{gap:8px 12px;padding:10px max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));padding-top:max(10px,env(safe-area-inset-top,0px))}
 .top .group{gap:6px}
-.top .brand span{display:none}
+.top .brand .brand-sub{display:none}
+.top .brand .mbs-logo{height:18px}
+.top .brand .mbs-badge{font-size:16px;padding:3px 6px 1px}
 .top .spacer{display:none}
 #linkBtn,#midiBtn,#learnBtn,#outBtn,#lightsBtn,.lights-drawer,#lightsOverlay,#qualSel,#resSel,#half,#dbl,#nudgeL,#nudgeR,.top label.ctl{display:none!important}
 .top button,.top select{min-height:38px;padding:6px 12px;font-size:13px}
-.live-btn{background:rgba(255,181,71,0.18)!important;border-color:rgba(255,181,71,0.5)!important;color:var(--amber)!important;font-weight:700}
-.audio-btn.on{background:rgba(0,212,255,0.18)!important;border-color:rgba(0,212,255,0.5)!important}
+.live-btn{position:relative;padding-left:24px!important}
+.live-btn::before{content:'';position:absolute;left:9px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--led-red);box-shadow:0 0 6px var(--led-red)}
+
 #audioIn{max-width:150px}
 .stage{display:flex;flex-direction:column;padding:10px max(10px,env(safe-area-inset-right,0px)) 10px max(10px,env(safe-area-inset-left,0px))}
-.panel{padding:12px;border-radius:14px;margin-bottom:12px}
+.panel{padding:12px 2px;margin-bottom:12px}
 .master{order:-1}
 .deck .thumb{width:46%;margin:0 auto;border-radius:8px}
 body[data-tab="a"] #deck1,body[data-tab="a"] .master>:not(.canvas-wrap),
@@ -88,15 +90,15 @@ input[type=range]:hover::-webkit-slider-thumb{transform:none}
 .deck .media-row{flex-wrap:wrap}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;
   padding:8px max(10px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));
-  background:rgba(10,12,16,0.97);border-top:1px solid var(--line)}
-.tabs button{min-height:44px;font-weight:700;letter-spacing:.06em;font-size:13px;border-radius:10px}
-.tabs button[data-tab="a"].on{color:var(--deck-a);border-color:var(--deck-a);background:rgba(0,212,255,0.12)}
-.tabs button[data-tab="mix"].on{color:var(--amber);border-color:var(--amber);background:rgba(255,181,71,0.12)}
-.tabs button[data-tab="b"].on{color:var(--deck-b);border-color:var(--deck-b);background:rgba(255,84,112,0.12)}
+  background:var(--chassis-bottom);border-top:1px solid #000;box-shadow:0 1px 0 var(--engrave) inset}
+.tabs button{min-height:44px;font-size:18px}
+.tabs button[data-tab="a"].on{background:var(--chip)!important;color:var(--chip-text)!important;border-color:var(--chip)!important}
+.tabs button[data-tab="mix"].on{background:var(--chip)!important;color:var(--chip-text)!important;border-color:var(--chip)!important}
+.tabs button[data-tab="b"].on{background:var(--chip)!important;color:var(--chip-text)!important;border-color:var(--chip)!important}
 .edit-toggle{width:100%}
 #toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .help{margin:0 10px 12px;padding:10px 14px}
-#bpm{font-size:22px;width:74px}
+#bpm{font-size:28px;width:80px}
 .top .meter{width:56px}
 .top .brand b{font-size:18px}
 /* modalità Live: solo l'immagine, a tutto schermo; un tocco riporta i controlli */
