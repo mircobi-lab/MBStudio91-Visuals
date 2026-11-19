@@ -3,6 +3,7 @@
 #include "PluginProcessor.h"
 
 class ShaderEditorWindow;
+class LightsWindow;
 
 class MBLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -27,6 +28,7 @@ public:
     void mouseDown (const juce::MouseEvent&) override;
 
     void takeStage();       // il palco torna nell'editor (proiettore chiuso)
+    void showLights();      // apre la finestra Luci
     void releaseStage();    // il palco va al proiettore
 
 private:
@@ -64,7 +66,7 @@ private:
 
     // barra superiore
     juce::Label title, bpmLabel, srcLabel, fpsLabel, bpmInfo;
-    juce::TextButton tapBtn { "Tap" }, downBtn { "1" }, projBtn { "Proiettore" }, learnBtn { "MIDI Learn" }, midiBtn { "MIDI..." }, helpBtn { "?" };
+    juce::TextButton tapBtn { "Tap" }, downBtn { "1" }, projBtn { "Proiettore" }, lightsBtn { "Luci..." }, learnBtn { "MIDI Learn" }, midiBtn { "MIDI..." }, helpBtn { "?" };
     juce::ComboBox clockBox, displayBox, resBox;
     std::unique_ptr<Apvts::ComboBoxAttachment> clockAtt;
     juce::Slider bpmSlider; std::unique_ptr<Apvts::SliderAttachment> bpmAtt;
@@ -78,14 +80,15 @@ private:
     juce::Slider xf; std::unique_ptr<Apvts::SliderAttachment> xfAtt;
     juce::TextButton goA { "A" }, goB { "B" };
     Knob xfTime, feedback, hue, zoom, kaleido, master, pixel, reactG, beatOffset;
-    juce::ComboBox modeBox, palBox, strobeBox, qualBox;
-    std::unique_ptr<Apvts::ComboBoxAttachment> modeAtt, palAtt, strobeAtt, qualAtt;
-    juce::Label modeL, palL, strobeL, qualL, colL;
+    juce::ComboBox modeBox, palBox, strobeBox, qualBox, kalGridBox;
+    std::unique_ptr<Apvts::ComboBoxAttachment> modeAtt, palAtt, strobeAtt, qualAtt, kalGridAtt;
+    juce::Label modeL, palL, strobeL, qualL, colL, kalGridL;
     juce::TextButton strobeBtn { "Strobo" }, invertBtn { "Inverti" }, mirrorBtn { "Specchio" }, blackBtn { "Buio" };
     std::unique_ptr<Apvts::ButtonAttachment> strobeBAtt, invertAtt, mirrorAtt, blackAtt;
     juce::TextButton colBtn[4];
 
     std::unique_ptr<ShaderEditorWindow> shaderWin;
+    std::unique_ptr<LightsWindow> lightsWin;
     bool stageHere = false, strobeKeyHeld = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MBVisualsEditor)

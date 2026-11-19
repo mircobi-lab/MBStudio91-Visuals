@@ -22,6 +22,11 @@ const juce::StringArray& qualityNames()
     static const juce::StringArray n { "Auto", "100%", "75%", "50%", "35%" };
     return n;
 }
+const juce::StringArray& kalGridNames()
+{
+    static const juce::StringArray n { "1", "2 (2x1)", "4 (2x2)", "8 (4x2)" };
+    return n;
+}
 const juce::StringArray& clockNames()
 {
     static const juce::StringArray n { "Host (DAW)", "Audio (rilevato)", "Interno / Tap" };
@@ -55,6 +60,7 @@ P::ParameterLayout createParameterLayout()
     p.push_back (fl (ids::hue, "Tinta", 0.f, 360.f, 0.f, 1.f, juce::String::fromUTF8 ("°")));
     p.push_back (fl (ids::zoom, "Zoom sul beat", 0.f, 1.f, 0.f));
     p.push_back (fl (ids::kaleido, "Caleido", 0.f, 12.f, 0.f, 1.f));
+    p.push_back (ch (ids::kalGrid, "Caleidoscopi", kalGridNames(), 0));
     p.push_back (bo (ids::strobe, "Strobo", false));
     p.push_back (ch (ids::strobeRate, juce::String::fromUTF8 ("Strobo velocità"), strobeNames(), 0));
     p.push_back (bo (ids::invert, "Inverti", false));

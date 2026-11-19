@@ -69,7 +69,9 @@ target_sources(MBStudio91Visuals PRIVATE
     Source/Renderer.cpp
     Source/StageComponent.cpp
     Source/ProjectorWindow.cpp
-    Source/ShaderEditorWindow.cpp)
+    Source/ShaderEditorWindow.cpp
+    Source/LightsEngine.cpp
+    Source/LightsWindow.cpp)
 
 if(TARGET MBStudio91Visuals_Standalone)
     target_sources(MBStudio91Visuals_Standalone PRIVATE Source/StandaloneApp.cpp)

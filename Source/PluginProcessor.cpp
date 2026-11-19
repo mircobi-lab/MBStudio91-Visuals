@@ -10,7 +10,7 @@ MBVisualsProcessor::MBVisualsProcessor()
                                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, "MBStudio91Visuals", createParameterLayout()),
       engine (apvts, feed),
-      renderer (apvts, engine)
+      renderer (apvts, engine, lights)
 {
     stageComp = std::make_unique<StageComponent>();
     stageComp->onDoubleClick = [this] { showProjector (projectorOpen() ? -1 : juce::jmax (0, projDisplay)); };
@@ -237,6 +237,7 @@ void MBVisualsProcessor::loadStateProps()
     projDisplay = (int) st.getProperty (state::projDisplay, -1);
     outW = (int) st.getProperty (state::outW, 1280); outH = (int) st.getProperty (state::outH, 720);
     renderer.setOutputSize (outW, outH);
+    if (st.hasProperty ("lights")) { juce::String err; lights.loadJson (st.getProperty ("lights").toString(), err); }
     {
         const juce::ScopedLock sl (midiLock);
         midiMap.clear();
@@ -253,6 +254,7 @@ void MBVisualsProcessor::getStateInformation (juce::MemoryBlock& dest)
 {
     auto& st = apvts.state;
     st.setProperty (state::outW, outW.load(), nullptr); st.setProperty (state::outH, outH.load(), nullptr);
+    st.setProperty ("lights", lights.toJson(), nullptr);
     {
         const juce::ScopedLock sl (midiLock);
         st.removeChild (st.getChildWithName ("MidiMap"), nullptr);

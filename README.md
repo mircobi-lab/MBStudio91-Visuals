@@ -98,6 +98,63 @@ Ctrl/Cmd+Invio compila; gli errori riportano la riga del tuo codice. *Salva pres
 in `~/Documents/MBStudio91 Visuals/Shaders/`: i file in quella cartella compaiono nell'elenco dei preset
 al prossimo avvio (dopo i 34 integrati).
 
+## Caleidoscopi 1 / 2 / 4 / 8
+
+**Caleidoscopi** (pannello MIX) divide l'immagine in 1, 2 (2×1), 4 (2×2) o 8 (4×2) caleidoscopi affiancati; le celle
+vicine sono specchiate, così le giunture combaciano. **Caleido** sceglie a parte il numero di spicchi di ciascuno
+(off = solo la griglia di copie specchiate). Entrambi sono automatizzabili e mappabili via MIDI.
+
+## Uscita luci: LED wall, barre, fari, strobo
+
+La finestra **Luci...** divide l'immagine d'uscita (palette, logo ed effetti compresi) in zone: ogni apparecchio prende
+i colori della sua zona e li manda sui suoi canali DMX. Le zone si trascinano sull'anteprima dal vivo (l'angolo in
+basso a destra le ridimensiona).
+
+- **Apparecchi pronti**: LED wall (colonne × righe di pixel), barra pixel, PAR/faro, strobo. Per ognuno: posizione
+  della zona, colonne/righe, universo e indirizzo DMX, e la riga dei **canali**: `R G B W` colori (il bianco viene
+  tolto dal colore), `C M Y`, `D` dimmer, `L` luminosità della zona, `F` lampo (strobo di MBStudio91 Visuals, ogni beat,
+  bassi o luminosità), `S` velocità strobo dai BPM, numeri = valore fisso. Ciò che sta tra `[ ]` si ripete per ogni
+  pixel. Esempi: `[R G B]` per LED wall e barre RGB, `D R G B W 0 0 0` per un PAR RGBW a 8 canali, `F 0` per uno
+  strobo a 2 canali (dimmer, velocità).
+- **Cablaggio**: serpentina, per colonne, inverti X/Y; "Pixel interi" non spezza mai un pixel tra due universi
+  (170 pixel RGB per universo, come chiede la maggior parte dei controller pixel).
+- **Uscite**: **Art-Net** (UDP 6454, unicast o broadcast) oppure **sACN / E1.31** (UDP 5568, multicast 239.255.x.y o
+  diretto), a 20-44 pacchetti al secondo, più **OSC** (`/mbvx/beat`, `/mbvx/bar`, `/mbvx/bpm`, `/mbvx/level`,
+  `/mbvx/bass`, `/mbvx/mid`, `/mbvx/high`, `/mbvx/strobe`). Canali sovrapposti: vince il valore più alto (HTP) e la
+  finestra li segnala.
+- **Identifica** fa lampeggiare in bianco un apparecchio per 3 secondi: utile per controllare indirizzi e cablaggio.
+- La patch si **importa/esporta** in JSON ed è la stessa di MBVX nel browser; viene salvata anche nel progetto della
+  DAW. Lo Standalone accetta `--lights patch.json` all'avvio.
+- L'invio avviene mentre l'uscita viene disegnata: tieni aperto il plugin o il **Proiettore**.
+
+**LED wall grandi** (Novastar, Colorlight e simili con scheda di invio): vanno pilotati come un monitor, con il
+**Proiettore** sull'uscita video collegata alla scheda di invio. Art-Net/sACN servono per pannelli, barre e controller
+pixel che leggono DMX in rete.
+
+### Con QLC+ (open source)
+
+QLC+ fa da "motore luci": riceve l'Art-Net/sACN di MBStudio91 Visuals e lo gira alle sue uscite (le interfacce DMX
+USB di molte marche, nodi Art-Net, sACN), con la sua libreria di apparecchi.
+
+1. In QLC+, scheda *Ingressi/Uscite*: sull'universo 1 scegli come **ingresso** Art-Net (127.0.0.1 se QLC+ è sullo
+   stesso computer) e come **uscita** la tua interfaccia DMX, poi spunta **Passthrough**.
+2. Attenzione alla numerazione: in QLC+ l'universo 1 corrisponde di default all'universo Art-Net 0. Metti
+   **universo 0** negli apparecchi, oppure imposta l'universo 1 nella configurazione dell'ingresso Art-Net di QLC+.
+   Con sACN: universo 1 = multicast 239.255.0.1.
+3. **OSC**: QLC+ ascolta dalla porta 7700 (universo 1); i widget della Virtual Console imparano `/mbvx/beat`,
+   `/mbvx/bass`, ecc. con il loro pulsante di apprendimento dell'ingresso esterno.
+
+MBVX nel browser parla anche con la **Web API** di QLC+ (avvio con `-w`, WebSocket `ws://IP:9999/qlcplusWS`):
+preme un pulsante a ogni beat, tiene premuto lo strobo, muove due cursori con livello e bassi.
+
+### Dante e Kling-Net
+
+- **Dante** (Audinate) è audio in rete, non controllo luci. Sul Mac, *Dante Virtual Soundcard* o *Dante Via* appaiono
+  come scheda audio: sceglili come ingresso nello Standalone (o nella DAW) e i visual reagiscono all'audio Dante.
+- **Kling-Net** è un protocollo di ArKaos concesso solo su licenza ai produttori: non c'è una specifica pubblica e non
+  può entrare in un progetto open source. Per apparecchi Kling-Net usa, se lo hanno, il modo DMX/Art-Net, oppure il
+  software ArKaos (Kling-Net Mapper / MediaMaster) per la parte Kling-Net.
+
 ## Compilare
 
 Richiede CMake ≥ 3.22 e un compilatore C++17. JUCE 9.0.5 viene scaricato automaticamente
@@ -112,7 +169,8 @@ Artefatti in `build/MBStudio91Visuals_artefacts/Release/{VST3,AU,Standalone}`.
 Il workflow `.github/workflows/build.yml` compila macOS (universale, firmato ad hoc), Windows e Linux e,
 per i tag `v*`, pubblica una Release con gli zip.
 
-Test eseguiti su Linux (Xvfb + Mesa llvmpipe, OpenGL 3.2 core): compilazione VST3 + Standalone,
+Test eseguiti su Linux (Xvfb + Mesa llvmpipe, OpenGL 3.2 core): compilazione VST3 + Standalone, uscita luci verificata
+con un ricevitore Art-Net/OSC (14 universi, colori e strobo corretti),
 tutti i 34 shader validati con glslangValidator (GLSL 1.50 e ES 3.00), **pluginval 1.0.4 livello 10
 superato** (anche con l'editor aperto), rilevamento BPM su segnale di prova a 128 BPM: 128.00 BPM,
 scarto 1,5 ms.

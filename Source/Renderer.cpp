@@ -4,7 +4,7 @@ using namespace mbv;
 
 static constexpr int TW = 192, TH = 108;
 
-Renderer::Renderer (juce::AudioProcessorValueTreeState& s, VisualEngine& e) : apvts (s), engine (e)
+Renderer::Renderer (juce::AudioProcessorValueTreeState& s, VisualEngine& e, LightsEngine& l) : apvts (s), engine (e), lights (l)
 {
     ctx.setRenderer (this);
     ctx.setPreferredVersion (juce::OpenGLVersion (3, 2));
@@ -141,6 +141,10 @@ void Renderer::openGLContextClosing()
     for (auto& kv : postCache) glDeleteProgram (kv.second.prog);
     postCache.clear();
     freeFbo (mixFb[0]); freeFbo (mixFb[1]); freeFbo (pixFb); freeFbo (thumbFbo);
+    for (auto& fb : lightChain) freeFbo (fb);
+    lightChain.clear(); lightChainW = lightChainH = 0;
+    if (lightSync) { glDeleteSync (lightSync); lightSync = nullptr; }
+    if (lightPbo) { glDeleteBuffers (1, &lightPbo); lightPbo = 0; }
     GLuint ts[4] = { audioTex, histTex, auxTex, blackTex }; glDeleteTextures (4, ts);
     audioTex = histTex = auxTex = blackTex = 0;
     if (vs) glDeleteShader (vs);
@@ -250,6 +254,11 @@ void Renderer::setPostUniforms (Program& p, const VisualEngine::Frame& fr, int w
     { const GLint l = p.loc ("uRes"); if (l >= 0) glUniform2f (l, (float) w, (float) h); }
     u1f ("uXf", fr.xf); u1f ("uFeedback", paramF (ids::feedback)); u1f ("uHue", paramF (ids::hue) * juce::MathConstants<float>::pi / 180.f);
     u1f ("uPZ", fr.pulse * paramF (ids::zoom)); u1f ("uKaleido", paramF (ids::kaleido));
+    {
+        static const float grid[4][2] { { 1, 1 }, { 2, 1 }, { 2, 2 }, { 4, 2 } };
+        const int gi = juce::jlimit (0, 3, (int) paramF (ids::kalGrid));
+        const GLint l = p.loc ("uKalGrid"); if (l >= 0) glUniform2f (l, grid[gi][0], grid[gi][1]);
+    }
     static const float rates[] = { 1.f, 2.f, 4.f, .25f };
     const float rate = rates[juce::jlimit (0, 3, (int) paramF (ids::strobeRate))];
     const double sp = std::fmod (std::fmod (fr.vb * rate, 1.0) + 1.0, 1.0);
@@ -297,6 +306,7 @@ void Renderer::renderOpenGL()
     const double now = juce::Time::getMillisecondCounterHiRes() * .001;
     const auto& fr = engine.update (now);
     ensureSizes();
+    pollLights (fr);
 
     // texture audio
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
@@ -331,7 +341,7 @@ void Renderer::renderOpenGL()
     const bool fbOn = paramF (ids::feedback) > .001f;
     ShaderLibrary::PostConfig c;
     c.src = showA && showB ? 0 : showA ? 1 : 2;
-    c.mode = c.src ? 0 : mode; c.fb = fbOn; c.hue = paramF (ids::hue) > .05f; c.kal = paramF (ids::kaleido) > 1.5f;
+    c.mode = c.src ? 0 : mode; c.fb = fbOn; c.hue = paramF (ids::hue) > .05f; c.kal = paramF (ids::kaleido) > 1.5f || paramF (ids::kalGrid) > .5f;
     c.mirror = paramF (ids::mirror) > .5f; c.zoom = paramF (ids::zoom) > 0.f; c.invert = paramF (ids::invert) > .5f;
     c.pal = (int) paramF (ids::palette); c.strobe = paramF (ids::strobe) > .5f;
     if (fbOn && ! fbWasOn)
@@ -379,6 +389,7 @@ void Renderer::renderOpenGL()
         glBlitFramebuffer (0, 0, pixW, pixH, 0, 0, cw, chh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
     glBindFramebuffer (GL_FRAMEBUFFER, screenFb);
+    if (drawn && lights.wantsCapture (now)) captureLights (screenFb, cw, chh);
 
     ++frameN; ++fpsN;
     if (now - fpsT > .5)
@@ -386,4 +397,58 @@ void Renderer::renderOpenGL()
         const float fps = (float) (fpsN / (now - fpsT)); fpsN = 0; fpsT = now;
         fpsValue = fps; engine.reportFps (fps);
     }
+}
+
+//==============================================================================
+/* Uscita luci: l'uscita viene ridotta a 256x144 con blit a metà ripetuti (ogni passo fa la media 2x2)
+   e letta in modo asincrono (PBO + fence): la CPU non aspetta mai la scheda video. */
+void Renderer::captureLights (GLuint srcFb, int w, int h)
+{
+    if (lightSync != nullptr || w <= 0 || h <= 0) return;
+    constexpr int GW = LightsEngine::gridW, GH = LightsEngine::gridH;
+    if (w != lightChainW || h != lightChainH)
+    {
+        for (auto& fb : lightChain) freeFbo (fb);
+        lightChain.clear();
+        int cw = w, ch = h;
+        while (cw > GW * 2 || ch > GH * 2) { cw = juce::jmax (GW, (cw + 1) / 2); ch = juce::jmax (GH, (ch + 1) / 2); lightChain.push_back (makeFbo (cw, ch)); }
+        lightChain.push_back (makeFbo (GW, GH));
+        lightChainW = w; lightChainH = h;
+    }
+    GLuint src = srcFb; int sw = w, sh = h;
+    for (auto& fb : lightChain)
+    {
+        glBindFramebuffer (GL_READ_FRAMEBUFFER, src); glBindFramebuffer (GL_DRAW_FRAMEBUFFER, fb.fb);
+        glBlitFramebuffer (0, 0, sw, sh, 0, 0, fb.w, fb.h, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        src = fb.fb; sw = fb.w; sh = fb.h;
+    }
+    if (lightPbo == 0) { glGenBuffers (1, &lightPbo); glBindBuffer (GL_PIXEL_PACK_BUFFER, lightPbo); glBufferData (GL_PIXEL_PACK_BUFFER, GW * GH * 4, nullptr, GL_STREAM_READ); }
+    glBindFramebuffer (GL_READ_FRAMEBUFFER, src);
+    glBindBuffer (GL_PIXEL_PACK_BUFFER, lightPbo);
+    glPixelStorei (GL_PACK_ALIGNMENT, 1);
+    glReadPixels (0, 0, GW, GH, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glBindBuffer (GL_PIXEL_PACK_BUFFER, 0);
+    glBindFramebuffer (GL_READ_FRAMEBUFFER, 0); glBindFramebuffer (GL_DRAW_FRAMEBUFFER, 0);
+    lightSync = glFenceSync (GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    glBindFramebuffer (GL_FRAMEBUFFER, srcFb);
+}
+
+void Renderer::pollLights (const VisualEngine::Frame& fr)
+{
+    if (lightSync == nullptr) return;
+    if (glClientWaitSync (lightSync, 0, 0) == GL_TIMEOUT_EXPIRED) return;
+    glDeleteSync (lightSync); lightSync = nullptr;
+    glBindBuffer (GL_PIXEL_PACK_BUFFER, lightPbo);
+    const auto* data = static_cast<const juce::uint8*> (glMapBufferRange (GL_PIXEL_PACK_BUFFER, 0, LightsEngine::gridW * LightsEngine::gridH * 4, GL_MAP_READ_BIT));
+    if (data != nullptr)
+    {
+        static const float rates[] = { 1.f, 2.f, 4.f, .25f };
+        LightsEngine::FrameInfo fi;
+        fi.vb = fr.vb; fi.phase = fr.phase; fi.bpm = fr.bpm; fi.bass = fr.bass; fi.mid = fr.mid; fi.high = fr.high; fi.level = fr.level;
+        fi.strobe = paramF (mbv::ids::strobe) > .5f; fi.black = paramF (mbv::ids::black) > .5f;
+        fi.strobeRate = rates[juce::jlimit (0, 3, (int) paramF (mbv::ids::strobeRate))];
+        lights.processGrid (data, fi);
+        glUnmapBuffer (GL_PIXEL_PACK_BUFFER);
+    }
+    glBindBuffer (GL_PIXEL_PACK_BUFFER, 0);
 }

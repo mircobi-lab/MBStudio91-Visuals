@@ -59,7 +59,7 @@ body::after{display:none}
 .top .group{gap:6px}
 .top .brand span{display:none}
 .top .spacer{display:none}
-#linkBtn,#midiBtn,#learnBtn,#outBtn,#qualSel,#resSel,#half,#dbl,#nudgeL,#nudgeR,.top label.ctl{display:none!important}
+#linkBtn,#midiBtn,#learnBtn,#outBtn,#lightsBtn,.lights-drawer,#lightsOverlay,#qualSel,#resSel,#half,#dbl,#nudgeL,#nudgeR,.top label.ctl{display:none!important}
 .top button,.top select{min-height:38px;padding:6px 12px;font-size:13px}
 .live-btn{background:rgba(255,181,71,0.18)!important;border-color:rgba(255,181,71,0.5)!important;color:var(--amber)!important;font-weight:700}
 .audio-btn.on{background:rgba(0,212,255,0.18)!important;border-color:rgba(0,212,255,0.5)!important}

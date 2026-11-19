@@ -15,6 +15,7 @@ namespace ids
     inline constexpr const char* hue        = "hue";         // tinta (gradi)
     inline constexpr const char* zoom       = "zoom";        // zoom sul beat
     inline constexpr const char* kaleido    = "kaleido";     // caleidoscopio (0 = off)
+    inline constexpr const char* kalGrid    = "kalGrid";     // caleidoscopi affiancati: 1, 2, 4, 8
     inline constexpr const char* strobe     = "strobe";
     inline constexpr const char* strobeRate = "strobeRate";
     inline constexpr const char* invert     = "invert";
@@ -54,6 +55,7 @@ const juce::StringArray& paletteNames();
 const juce::StringArray& strobeNames();
 const juce::StringArray& qualityNames();
 const juce::StringArray& clockNames();
+const juce::StringArray& kalGridNames();
 
 juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 

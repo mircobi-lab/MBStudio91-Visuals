@@ -7,6 +7,7 @@
     - argomenti da riga di comando per i test (--preset-a N, --preset-b N, --palette N, --pixel N, --xf V, --shot FILE). */
 
 #include "PluginProcessor.h"
+#include "PluginEditor.h"
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_audio_plugin_client/juce_audio_plugin_client.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
@@ -85,6 +86,8 @@ public:
             else if (a == "--mode") set (mbv::ids::mode, v.getFloatValue());
             else if (a == "--feedback") set (mbv::ids::feedback, v.getFloatValue());
             else if (a == "--test-tone") proc->testTone = true;
+            else if (a == "--show-lights") juce::Timer::callAfterDelay (500, [proc] { if (auto* ed = dynamic_cast<MBVisualsEditor*> (proc->getActiveEditor())) ed->showLights(); });
+            else if (a == "--lights") { juce::String err; if (! proc->lights.loadJson (juce::File (v).loadFileAsString(), err)) DBG ("patch luci: " << err); }
         }
     }
 

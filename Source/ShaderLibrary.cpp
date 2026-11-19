@@ -54,6 +54,7 @@ precision highp float;
 uniform sampler2D uA,uB,uPrev,uT;
 uniform vec2 uRes;
 uniform float uXf,uFeedback,uHue,uPZ,uKaleido,uStrobePhase,uMaster;
+uniform vec2 uKalGrid;
 uniform vec3 uPalC1,uPalC2,uPalC3,uMono;
 out vec4 o;
 float luma(vec3 c){return dot(c,vec3(.299,.587,.114));}
@@ -73,9 +74,20 @@ vec3 mixStage(){
   c*=1.-uPZ*.15;
 #endif
 #if KAL
-  { float ar=uRes.x/uRes.y; vec2 p=vec2(c.x*ar,c.y);
-    float r=length(p), a=atan(p.y,p.x), s=6.2831853/uKaleido;
-    a=abs(mod(a,s)-s*.5); p=vec2(cos(a),sin(a))*r; c=vec2(p.x/ar,p.y); }
+  { float ars=uRes.x/uRes.y, ar=ars;
+    if(uKalGrid.x*uKalGrid.y>1.5){
+      vec2 q=(c+.5)*uKalGrid, id=floor(q), f=fract(q);
+      f=mix(f,1.-f,mod(id,2.));
+      c=f-.5; ar=ars*uKalGrid.y/uKalGrid.x;
+      c*=ar<ars?vec2(ar/ars,1.):vec2(1.,ars/ar);
+      ar=ars;
+    }
+    if(uKaleido>1.5){
+      vec2 p=vec2(c.x*ar,c.y);
+      float r=length(p), a=atan(p.y,p.x), s=6.2831853/uKaleido;
+      a=abs(mod(a,s)-s*.5); p=vec2(cos(a),sin(a))*r; c=vec2(p.x/ar,p.y);
+    }
+  }
 #endif
 #if MIRROR
   c.x=-abs(c.x);

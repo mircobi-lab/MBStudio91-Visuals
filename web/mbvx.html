@@ -276,6 +276,43 @@ body.has-logo .logo-fx{display:grid}
 .deck.drop,.master.drop{outline:2px dashed var(--amber);outline-offset:-6px}
 #learnBanner{display:none;position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:70;background:rgba(255,181,71,0.95);color:#1a1200;font-weight:700;font-size:13px;padding:8px 16px;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,0.5)}
 body.learning #learnBanner{display:block}
+
+/* ===== Uscita luci ===== */
+.lights-drawer{position:fixed;top:0;right:0;bottom:0;width:min(470px,100vw);z-index:85;background:rgba(11,13,18,0.97);border-left:1px solid var(--line-2);
+  box-shadow:-24px 0 60px rgba(0,0,0,.55);transform:translateX(105%);transition:transform .22s ease;overflow-y:auto;padding:14px 16px 48px;font-size:12px}
+body.lights-open .lights-drawer{transform:none}
+.lights-drawer h4{margin:16px 0 6px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.lt-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lt-head b{font-size:15px;letter-spacing:.02em}
+.lt-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.lights-drawer input[type=text],.lights-drawer input[type=number]{background:var(--panel-2);border:1px solid var(--line-2);color:var(--fg);border-radius:6px;padding:5px 7px;font:12px var(--mono);min-width:0}
+.lights-drawer input[type=number]{width:62px}
+.lights-drawer .wide{flex:1 1 180px}
+.lights-drawer label.chk{display:inline-flex;gap:5px;align-items:center;cursor:pointer;color:var(--fg)}
+.lt-hint{font-size:11px;color:var(--muted);line-height:1.45;margin:2px 0 4px}
+.lt-status{font:11px/1.5 var(--mono);color:var(--muted);background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin-top:8px;white-space:pre-wrap}
+.lt-status .ok{color:var(--ok)} .lt-status .bad{color:var(--err)}
+.fx-card{border:1px solid var(--line-2);border-radius:10px;padding:8px 10px;margin:8px 0;background:var(--panel)}
+.fx-card.sel{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset}
+.fx-card .fx-top{display:flex;gap:6px;align-items:center}
+.fx-card .fx-top .idx{font:700 11px var(--mono);color:var(--amber);width:20px}
+.fx-card .fx-top input{flex:1}
+.fx-card .fx-top button{padding:4px 8px;min-height:0}
+.lt-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 8px;margin-top:6px}
+.lt-grid label{display:flex;flex-direction:column;gap:2px;font-size:10px;color:var(--muted)}
+.lt-grid label input{width:100%!important}
+.lt-grid .span4{grid-column:1/-1}
+.lt-grid .span2{grid-column:span 2}
+.fx-info{font:10.5px var(--mono);color:var(--muted);margin-top:6px}
+.fx-info.warn{color:var(--err)}
+#lightsOverlay{position:absolute;inset:0;pointer-events:none;display:none;z-index:5}
+body.lights-edit #lightsOverlay{display:block}
+.lz{position:absolute;border:1.5px solid var(--amber);background-color:rgba(255,181,71,.07);pointer-events:auto;cursor:move;touch-action:none;
+  font:10px/1.2 var(--mono);color:#fff;text-shadow:0 1px 2px #000;padding:2px 4px;box-sizing:border-box;overflow:hidden}
+.lz.sel{border-color:#fff;background-color:rgba(255,255,255,.1);z-index:2}
+.lz .lz-h{position:absolute;right:0;bottom:0;width:12px;height:12px;background:var(--amber);cursor:nwse-resize;border-radius:3px 0 0 0}
+.lz.sel .lz-h{background:#fff}
+#lightsBtn.on{background:rgba(255,181,71,0.18);border-color:rgba(255,181,71,0.55);color:var(--amber)}
 </style>
 </head>
 <body>
@@ -321,6 +358,7 @@ body.learning #learnBanner{display:block}
       <option value="960x540">540p</option>
     </select>
     <button id="outBtn" title="Apre la finestra d'uscita da trascinare sul proiettore">Uscita</button>
+    <button id="lightsBtn" title="Uscita luci: LED wall, barre, fari e strobo (Art-Net, sACN, DMX USB, QLC+)">Luci</button>
     <button id="fsBtn" title="Schermo intero (F)">Proietta</button>
     <button id="saveBtn" title="Salva il set (shader, palette e impostazioni)">Salva</button>
     <button id="loadBtn" title="Carica un set salvato">Carica</button>
@@ -335,6 +373,7 @@ body.learning #learnBanner{display:block}
   <section class="panel master">
     <div class="canvas-wrap" id="canvasWrap">
       <canvas id="out" width="1280" height="720"></canvas>
+      <div id="lightsOverlay"></div>
       <button class="fs-overlay" id="fsOverlay" title="Schermo intero (doppio clic sul canvas)">⛶</button>
     </div>
     <div class="xf">
@@ -419,6 +458,10 @@ body.learning #learnBanner{display:block}
         <input id="zoom" type="range" min="0" max="1" step="0.01" value="0" data-ctl="mix.zoom"></label>
       <label class="ctl"><span class="row"><span class="lbl">Caleido</span><output id="kaleidoOut">off</output></span>
         <input id="kaleido" type="range" min="0" max="12" step="1" value="0" data-ctl="mix.kaleido"></label>
+      <label class="ctl"><span class="row"><span class="lbl">Caleidoscopi</span></span>
+        <select id="kalGrid" data-ctl="mix.kalGrid" title="Quanti caleidoscopi affiancati: 1, 2 (2×1), 4 (2×2), 8 (4×2). Gli spicchi si scelgono con Caleido">
+          <option value="1">1</option><option value="2">2 (2×1)</option><option value="4">4 (2×2)</option><option value="8">8 (4×2)</option>
+        </select></label>
       <label class="ctl"><span class="row"><span class="lbl">Strobo</span></span>
         <select id="strobeRate" data-ctl="mix.strobeRate">
           <option value="1">1 per beat</option><option value="2">2 per beat</option><option value="4">4 per beat</option><option value="0.25">1 per battuta</option>
@@ -493,6 +536,67 @@ body.learning #learnBanner{display:block}
   </div>
 </details>
 
+<aside class="lights-drawer" id="lightsDrawer" aria-label="Uscita luci">
+  <div class="lt-head"><b>Uscita luci</b><button id="ltClose" title="Chiudi">✕</button></div>
+  <div class="lt-hint">L'immagine d'uscita (palette, logo ed effetti compresi) viene divisa in zone: ogni apparecchio prende i colori della sua zona. Invia ad Art-Net / sACN tramite <b>bridge.js</b>, a un'interfaccia <b>DMX USB</b> collegata a questo computer, e comanda <b>QLC+</b>.</div>
+  <div class="lt-row">
+    <label class="chk"><input type="checkbox" id="ltOn"> Invio attivo</label>
+    <select id="ltFps" title="Pacchetti al secondo (il DMX arriva a circa 44)"><option value="20">20 fps</option><option value="30">30 fps</option><option value="40">40 fps</option><option value="44">44 fps</option></select>
+    <label class="chk"><input type="checkbox" id="ltEdit"> Zone sullo schermo</label>
+    <label class="chk" title="Tutti i canali a zero"><input type="checkbox" id="ltBlack"> Buio luci</label>
+  </div>
+  <div class="lt-status" id="ltStatus">Spento</div>
+
+  <h4>Rete · Art-Net / sACN (bridge.js)</h4>
+  <div class="lt-row">
+    <select id="ltProto"><option value="artnet">Art-Net</option><option value="sacn">sACN / E1.31</option><option value="none">Nessuna</option></select>
+    <input type="text" id="ltIp" class="wide" placeholder="IP di destinazione" spellcheck="false">
+    <button id="ltBridge">Collega bridge</button>
+  </div>
+  <div class="lt-hint">Art-Net: IP del nodo o del controller; <b>127.0.0.1</b> per QLC+ sullo stesso Mac; broadcast di rete es. 2.255.255.255. sACN: lascia vuoto per il multicast standard (239.255.x.y), oppure l'IP per l'invio diretto. Avvia prima <code>node bridge.js</code> (nella stessa cartella di MBVX).</div>
+
+  <h4>DMX USB (Chrome / Edge)</h4>
+  <div class="lt-row">
+    <select id="ltUsbMode"><option value="pro">Enttec DMX USB Pro e compatibili</option><option value="open">Open DMX / FTDI (sperimentale)</option></select>
+    <label>Universo <input type="number" id="ltUsbUni" min="0" max="63999"></label>
+    <button id="ltUsb">Collega</button>
+  </div>
+
+  <h4>QLC+ (Web API)</h4>
+  <div class="lt-row"><input type="text" id="ltQlcUrl" class="wide" spellcheck="false"><button id="ltQlc">Collega</button></div>
+  <div class="lt-row">
+    <label>Beat <input type="number" id="ltQlcBeat" min="0" placeholder="ID"></label>
+    <label>Strobo <input type="number" id="ltQlcStrobe" min="0" placeholder="ID"></label>
+    <label>Livello <input type="number" id="ltQlcLevel" min="0" placeholder="ID"></label>
+    <label>Bassi <input type="number" id="ltQlcBass" min="0" placeholder="ID"></label>
+  </div>
+  <div class="lt-hint">Avvia QLC+ con l'interfaccia web (opzione <code>-w</code>, porta 9999). Gli ID sono quelli dei widget della Virtual Console: Beat preme un pulsante a ogni battito, Strobo lo tiene premuto finché lo strobo di MBVX è acceso, Livello e Bassi muovono due cursori (0-255).</div>
+
+  <h4>OSC (tramite bridge)</h4>
+  <div class="lt-row">
+    <label class="chk"><input type="checkbox" id="ltOsc"> Invia</label>
+    <input type="text" id="ltOscHost" style="width:120px" spellcheck="false"> : <input type="number" id="ltOscPort" min="1" max="65535">
+  </div>
+  <div class="lt-hint">/mbvx/beat, /mbvx/bar (interi), /mbvx/bpm, /mbvx/level, /mbvx/bass, /mbvx/mid, /mbvx/high (0-1), /mbvx/strobe. QLC+ ascolta l'OSC dalla porta 7700 (universo 1).</div>
+
+  <h4>Apparecchi</h4>
+  <div class="lt-row">
+    <button data-add="wall">+ LED wall</button><button data-add="bar">+ Barra pixel</button><button data-add="par">+ PAR / faro</button><button data-add="strobe">+ Strobo</button>
+  </div>
+  <div id="ltList"></div>
+  <div class="lt-row">
+    <button id="ltCopy">Copia patch</button><button id="ltSaveP">Salva patch…</button><button id="ltLoadP">Importa…</button>
+    <input id="ltLoadFile" type="file" accept=".json,application/json" hidden>
+  </div>
+  <details class="lt-hint" style="margin-top:10px"><summary>Canali: come si scrivono</summary>
+    Ogni apparecchio ha una riga di canali, uno per lettera, separati da spazi, a partire dall'indirizzo DMX.
+    Le lettere tra <b>[ ]</b> si ripetono per ogni pixel (colonne × righe); quelle fuori usano il colore medio della zona.<br>
+    <b>R G B</b> rosso, verde, blu · <b>W</b> bianco (tolto dal colore) · <b>C M Y</b> ciano, magenta, giallo · <b>D</b> dimmer (luminosità dell'apparecchio) ·
+    <b>L</b> luminosità della zona · <b>F</b> lampo (Strobo di MBVX, beat, bassi o livello) · <b>S</b> velocità strobo dai BPM · un <b>numero</b> 0-255 è un valore fisso.<br>
+    Esempi: LED wall o barra RGB <code>[R G B]</code> · barra con dimmer <code>D [R G B]</code> · PAR RGBW a 8 canali <code>D R G B W 0 0 0</code> · strobo a 2 canali <code>F 0</code> (dimmer, velocità).<br>
+    Senza "Pixel interi" i canali continuano nell'universo successivo; con l'opzione attiva un pixel non viene mai spezzato tra due universi (170 pixel RGB per universo, come chiede la maggior parte dei controller).
+  </details>
+</aside>
 <div id="learnBanner">MIDI LEARN: clicca un controllo, poi muovi la manopola · clic destro = togli l'assegnazione · Esc per uscire</div>
 <div id="toast" role="status"></div>
 <div id="tip" role="tooltip"></div>
@@ -1346,6 +1450,7 @@ ${['KIND', 'SRC', 'MODE', 'FB', 'HUE', 'KAL', 'MIRROR', 'ZOOM', 'INVERT', 'PAL',
 uniform sampler2D uA,uB,uPrev,uT;
 uniform vec2 uRes;
 uniform float uXf,uFeedback,uHue,uPZ,uKaleido,uStrobePhase,uMaster;
+uniform vec2 uKalGrid;   // caleidoscopi affiancati: colonne, righe (1x1, 2x1, 2x2, 4x2)
 uniform vec3 uPalC1,uPalC2,uPalC3;
 uniform sampler2D uLogo;
 uniform vec4 uLogoP;   // diametro (frazione dell'altezza), opacità, rapporto larghezza/altezza del PNG, pulsazione
@@ -1368,9 +1473,20 @@ vec3 mixStage(){
   c*=1.-uPZ*.15;
 #endif
 #if KAL
-  { float ar=uRes.x/uRes.y; vec2 p=vec2(c.x*ar,c.y);
-    float r=length(p), a=atan(p.y,p.x), s=6.2831853/uKaleido;
-    a=abs(mod(a,s)-s*.5); p=vec2(cos(a),sin(a))*r; c=vec2(p.x/ar,p.y); }
+  { float ars=uRes.x/uRes.y, ar=ars;
+    if(uKalGrid.x*uKalGrid.y>1.5){
+      vec2 q=(c+.5)*uKalGrid, id=floor(q), f=fract(q);
+      f=mix(f,1.-f,mod(id,2.));                       // celle vicine specchiate: le giunture combaciano
+      c=f-.5; ar=ars*uKalGrid.y/uKalGrid.x;           // proporzioni della cella
+      c*=ar<ars?vec2(ar/ars,1.):vec2(1.,ars/ar);      // ogni cella mostra la parte centrale, senza deformare
+      ar=ars;
+    }
+    if(uKaleido>1.5){
+      vec2 p=vec2(c.x*ar,c.y);
+      float r=length(p), a=atan(p.y,p.x), s=6.2831853/uKaleido;
+      a=abs(mod(a,s)-s*.5); p=vec2(cos(a),sin(a))*r; c=vec2(p.x/ar,p.y);
+    }
+  }
 #endif
 #if MIRROR
   c.x=-abs(c.x);
@@ -1470,7 +1586,7 @@ void main(){
 #endif
 }`;
 }
-const POST_UNIFORMS = ['uA','uB','uPrev','uT','uRes','uXf','uFeedback','uHue','uPZ','uKaleido','uStrobePhase','uMaster','uPalC1','uPalC2','uPalC3','uLogo','uLogoP','uLogoPos'];
+const POST_UNIFORMS = ['uA','uB','uPrev','uT','uRes','uXf','uFeedback','uHue','uPZ','uKaleido','uKalGrid','uStrobePhase','uMaster','uPalC1','uPalC2','uPalC3','uLogo','uLogoP','uLogoPos'];
 
 const canvas = $('#out');
 const canvasWrap = $('#canvasWrap');
@@ -1548,7 +1664,7 @@ function postReady(e, force) {
 // Restituisce la configurazione da usare in questo fotogramma (quella richiesta se è pronta, altrimenti l'ultima valida)
 function postSelect(src) {
   const fb = mix.feedback > 0.001 ? 1 : 0;
-  const mk = SRC => ({ SRC, MODE: SRC ? 0 : mix.mode, FB: fb, HUE: mix.hue * Math.PI / 180 > .001 ? 1 : 0, KAL: mix.kaleido > 1.5 ? 1 : 0,
+  const mk = SRC => ({ SRC, MODE: SRC ? 0 : mix.mode, FB: fb, HUE: mix.hue * Math.PI / 180 > .001 ? 1 : 0, KAL: mix.kaleido > 1.5 || mix.kalGrid > 1 ? 1 : 0,
     MIRROR: mix.mirror ? 1 : 0, ZOOM: mix.zoom > 0 ? 1 : 0, INVERT: mix.invert ? 1 : 0, PAL: mix.palette | 0, STROBE: mix.strobe ? 1 : 0, LOGO: logo.tex && mix.logoAlpha > 0.001 ? 1 : 0 });
   const want = SRC => { const c = mk(SRC); return fb ? [postEntry({ ...c, KIND: 0 }), postEntry({ ...c, KIND: 1 })] : [postEntry({ ...c, KIND: 2 })]; };
   const progs = want(src);
@@ -1563,6 +1679,7 @@ function postSelect(src) {
   post.tick++; post.active.progs.forEach(e => e.used = post.tick);
   return post.active;
 }
+const KAL_GRID = { 1: [1, 1], 2: [2, 1], 4: [2, 2], 8: [4, 2] };
 const rgbCache = {};
 function rgbOf(hex) { return rgbCache[hex] || (rgbCache[hex] = hexToRgb(hex)); }
 function postUniforms(e, pulse, vb) {
@@ -1571,6 +1688,7 @@ function postUniforms(e, pulse, vb) {
   gl.uniform2f(u.uRes, RES.w, RES.h);
   gl.uniform1f(u.uXf, mix.xf); gl.uniform1f(u.uFeedback, mix.feedback); gl.uniform1f(u.uHue, mix.hue * Math.PI / 180);
   gl.uniform1f(u.uPZ, pulse * mix.zoom); gl.uniform1f(u.uKaleido, mix.kaleido);
+  if (u.uKalGrid) { const g = KAL_GRID[mix.kalGrid] || [1, 1]; gl.uniform2f(u.uKalGrid, g[0], g[1]); }
   gl.uniform1f(u.uStrobePhase, (((vb * mix.strobeRate) % 1) + 1) % 1);
   gl.uniform1f(u.uMaster, mix.black ? 0 : mix.master);
   if (u.uPalC1) { gl.uniform3fv(u.uPalC1, rgbOf(mix.palC1)); gl.uniform3fv(u.uPalC2, rgbOf(mix.palC2)); gl.uniform3fv(u.uPalC3, rgbOf(mix.palC3)); }
@@ -1618,7 +1736,7 @@ let RES = { w: 1280, h: 720 };
 let mixFb = [null, null], cur = 0;
 
 const mix = {
-  xf: 0, mode: 0, feedback: 0, hue: 0, zoom: 0, kaleido: 0,
+  xf: 0, mode: 0, feedback: 0, hue: 0, zoom: 0, kaleido: 0, kalGrid: 1,
   strobe: false, strobeRate: 1, invert: false, mirror: false, black: false,
   master: 1, palette: 0,
   palC1: '#00d4ff', palC2: '#ffb547', palC3: '#ff5470',
@@ -2349,6 +2467,7 @@ function render(dt) {
   }
 
   for (const d of decks) if (d.thumbNow) drawThumb(d);
+  lightsCapture(performance.now());
   booting = false;
   frameN++;
   return shared;
@@ -2419,6 +2538,7 @@ function frame(now) {
     const realDt = Math.min(1, (now - lastT) / 1000), dt = Math.min(0.1, realDt); lastT = now;
     safe(() => audio.update(now / 1000));
     safe(() => clock.update(realDt));
+    safe(() => lightsPoll());
     const sh = safe(() => render(dt));
     if (sh) safe(() => updateUi(sh));
     fpsN++;
@@ -2429,6 +2549,467 @@ function frame(now) {
     }
   } catch (err) { reportError(err); }
   requestAnimationFrame(frame);
+}
+
+
+/* ---------- Uscita luci: pixel-map verso LED wall, barre, PAR e strobo ----------
+   L'uscita viene ridotta a una griglia di 256x144 (blit a metà ripetuti = media dei pixel) e letta in modo
+   asincrono (buffer + fence) al ritmo scelto. Ogni apparecchio fa la media della sua zona, pixel per pixel,
+   e scrive i suoi canali negli universi DMX (fusione HTP: vince il valore più alto). */
+const LIGHT_W = 256, LIGHT_H = 144;
+const LT_TYPES = {
+  wall:   { name: 'LED wall', x: .1, y: .1, w: .8, h: .8, cols: 32, rows: 16, ch: '[R G B]', whole: true },
+  bar:    { name: 'Barra pixel', x: .05, y: .82, w: .9, h: .1, cols: 8, rows: 1, ch: '[R G B]', whole: true },
+  par:    { name: 'PAR RGBW', x: .4, y: .35, w: .2, h: .3, cols: 1, rows: 1, ch: 'D R G B W 0 0 0', whole: true },
+  strobe: { name: 'Strobo', x: 0, y: 0, w: 1, h: 1, cols: 1, rows: 1, ch: 'F 0', flash: 'strobe', whole: true }
+};
+const LT_DEFAULT = { on: false, fps: 40, blackout: false, proto: 'artnet', ip: '127.0.0.1', usbMode: 'pro', usbUni: 1,
+  qlcUrl: 'ws://127.0.0.1:9999/qlcplusWS', qlc: { beat: '', strobe: '', level: '', bass: '' },
+  osc: false, oscHost: '127.0.0.1', oscPort: 7700, fixtures: [] };
+const lights = {
+  cfg: null, grid: new Uint8Array(LIGHT_W * LIGHT_H * 4), sync: null, pbo: null, chain: [], chainKey: '', lastCap: 0,
+  ws: null, wsOk: false, wsStats: null, wsRetry: 0, port: null, writer: null, usbBusy: false, usbFrames: 0,
+  qlcWs: null, qlcOk: false, qlcBeat: -1, qlcStrobe: false, qlcLast: {}, qlcT: 0,
+  oscBeat: -1, oscT: 0, oscStrobe: null,
+  plans: null, planKey: '', unis: new Map(), sel: -1, identify: null, sent: 0
+};
+function ltLoad(c) {
+  const d = JSON.parse(JSON.stringify(LT_DEFAULT));
+  const cfg = Object.assign(d, c || {}); cfg.qlc = Object.assign({}, LT_DEFAULT.qlc, (c && c.qlc) || {});
+  cfg.fixtures = (cfg.fixtures || []).filter(f => f && typeof f === 'object').map(ltClean);
+  lights.cfg = cfg; lights.planKey = ''; lights.sel = -1;
+}
+function ltClean(f) {
+  const n = (v, lo, hi, def) => { v = +v; return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : def; };
+  return { id: f.id || Math.random().toString(36).slice(2, 9), type: LT_TYPES[f.type] ? f.type : 'wall', name: String(f.name || 'Apparecchio').slice(0, 40),
+    x: n(f.x, 0, 1, 0), y: n(f.y, 0, 1, 0), w: n(f.w, .005, 1, .2), h: n(f.h, .005, 1, .2),
+    cols: Math.round(n(f.cols, 1, 512, 1)), rows: Math.round(n(f.rows, 1, 512, 1)),
+    ch: String(f.ch == null ? '[R G B]' : f.ch).slice(0, 400), universe: Math.round(n(f.universe, 0, 63999, 1)), address: Math.round(n(f.address, 1, 512, 1)),
+    whole: f.whole !== false, serp: !!f.serp, vert: !!f.vert, flipX: !!f.flipX, flipY: !!f.flipY, dim: n(f.dim, 0, 1, 1),
+    flash: ['strobe', 'beat', 'bass', 'level'].includes(f.flash) ? f.flash : 'strobe' };
+}
+let ltSaveT = 0;
+function ltSave() { clearTimeout(ltSaveT); ltSaveT = setTimeout(() => LS.set('lights', lights.cfg), 300); }
+
+/* --- piano dei canali: per ogni apparecchio, universo/indirizzo/significato di ogni canale --- */
+const TOK = { R: 1, G: 2, B: 3, W: 4, C: 5, M: 6, Y: 7, D: 8, L: 9, F: 10, S: 11 };
+function ltParse(ch) {
+  const m = ch.toUpperCase().match(/^([^\[]*)(?:\[([^\]]*)\](.*))?$/);
+  const toks = t => (t || '').trim().split(/[\s,]+/).filter(Boolean).map(x => /^\d+$/.test(x) ? -Math.min(255, +x) - 1 : (TOK[x] || 0));
+  if (!m) return { head: toks(ch), pix: [], tail: [] };
+  return { head: toks(m[1]), pix: m[2] != null ? toks(m[2]) : [], tail: toks(m[3]) };
+}
+function ltPlan() {
+  const key = JSON.stringify(lights.cfg.fixtures);
+  if (key === lights.planKey && lights.plans) return lights.plans;
+  lights.planKey = key;
+  lights.plans = lights.cfg.fixtures.map(f => {
+    const P = ltParse(f.ch), cols = f.cols, rows = f.rows, nPix = P.pix.length ? cols * rows : 0;
+    // zona e celle dei pixel nella griglia (in pixel della griglia, y dall'alto)
+    const gx = v => Math.max(0, Math.min(LIGHT_W, v * LIGHT_W)), gy = v => Math.max(0, Math.min(LIGHT_H, v * LIGHT_H));
+    const cell = (x0, y0, x1, y1) => { let a = Math.floor(gx(x0)), b = Math.ceil(gx(x1)), c = Math.floor(gy(y0)), d = Math.ceil(gy(y1));
+      if (b <= a) b = Math.min(LIGHT_W, a + 1); if (a >= LIGHT_W) a = LIGHT_W - 1; if (d <= c) d = Math.min(LIGHT_H, c + 1); if (c >= LIGHT_H) c = LIGHT_H - 1; return [a, b, c, d]; };
+    const zone = cell(f.x, f.y, f.x + f.w, f.y + f.h);
+    const cells = new Int16Array(nPix * 4);
+    for (let k = 0; k < nPix; k++) {
+      // ordine di cablaggio: righe dall'alto a sinistra (o colonne), serpentina, specchi
+      let i, j;
+      if (f.vert) { i = Math.floor(k / rows); j = k % rows; if (f.serp && (i & 1)) j = rows - 1 - j; }
+      else { j = Math.floor(k / cols); i = k % cols; if (f.serp && (j & 1)) i = cols - 1 - i; }
+      if (f.flipX) i = cols - 1 - i; if (f.flipY) j = rows - 1 - j;
+      const c4 = cell(f.x + f.w * i / cols, f.y + f.h * j / rows, f.x + f.w * (i + 1) / cols, f.y + f.h * (j + 1) / rows);
+      cells.set(c4, k * 4);
+    }
+    // canali
+    const U = [], A = [], T = [], X = [], W = [];               // universo, indirizzo (0-511), token, pixel (-1 = zona), gruppo con W
+    let u = f.universe, a = f.address - 1;
+    const put = (tok, pix, hasW) => { if (a > 511) { u++; a = 0; } U.push(u); A.push(a); T.push(tok); X.push(pix); W.push(hasW); a++; };
+    const hw = arr => arr.includes(TOK.W) ? 1 : 0;
+    P.head.forEach(t => put(t, -1, hw(P.head)));
+    for (let k = 0; k < nPix; k++) {
+      if (f.whole && a + P.pix.length > 512 && P.pix.length <= 512) { u++; a = 0; }
+      P.pix.forEach(t => put(t, k, hw(P.pix)));
+    }
+    P.tail.forEach(t => put(t, -1, hw(P.tail)));
+    return { f, zone, cells, nPix, U: Uint16Array.from(U), A: Uint16Array.from(A), T: Int16Array.from(T), X: Int32Array.from(X), W: Uint8Array.from(W),
+      end: U.length ? { u: U[U.length - 1], a: A[A.length - 1] + 1 } : null, count: U.length };
+  });
+  return lights.plans;
+}
+
+/* --- cattura dell'uscita --- */
+function ltFbo(w, h) { return makeFbo(w, h); }
+function lightsCapture(now) {
+  const c = lights.cfg;
+  if (!c || !c.on || lights.sync || !c.fixtures.length) return;
+  if (!(lights.wsOk || lights.writer)) return;
+  if (now - lights.lastCap < 1000 / c.fps - 3) return;
+  lights.lastCap = now;
+  const key = canvas.width + 'x' + canvas.height;
+  if (lights.chainKey !== key) {
+    lights.chain.forEach(freeFbo); lights.chain = [];
+    let w = canvas.width, h = canvas.height;
+    while (w > LIGHT_W * 2 || h > LIGHT_H * 2) { w = Math.max(LIGHT_W, Math.ceil(w / 2)); h = Math.max(LIGHT_H, Math.ceil(h / 2)); lights.chain.push(ltFbo(w, h)); }
+    lights.chain.push(ltFbo(LIGHT_W, LIGHT_H)); lights.chainKey = key;
+  }
+  let src = null, sw = canvas.width, sh = canvas.height;
+  for (const f of lights.chain) {
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src ? src.fb : null); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, f.fb);
+    gl.blitFramebuffer(0, 0, sw, sh, 0, 0, f.w, f.h, gl.COLOR_BUFFER_BIT, gl.LINEAR);
+    src = f; sw = f.w; sh = f.h;
+  }
+  if (!lights.pbo) { lights.pbo = gl.createBuffer(); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, lights.pbo); gl.bufferData(gl.PIXEL_PACK_BUFFER, LIGHT_W * LIGHT_H * 4, gl.STREAM_READ); }
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src.fb);
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER, lights.pbo);
+  gl.readPixels(0, 0, LIGHT_W, LIGHT_H, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+  lights.sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+}
+function lightsPoll() {
+  if (!lights.cfg) return;
+  const vb = clock.vis(), phase = ((vb % 1) + 1) % 1;
+  if (lights.sync && gl.getSyncParameter(lights.sync, gl.SYNC_STATUS) === gl.SIGNALED) {
+    gl.deleteSync(lights.sync); lights.sync = null;
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, lights.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, lights.grid); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    lightsCompute(vb, phase); lightsSend();
+  }
+  lightsQlc(vb); lightsOscTick(vb);
+}
+
+/* --- colori → canali --- */
+function lightsCompute(vb, phase) {
+  const plans = ltPlan(), G = lights.grid, unis = lights.unis, c = lights.cfg;
+  unis.forEach(b => b.fill(0));
+  const need = new Set(); plans.forEach(p => { for (let i = 0; i < p.U.length; i++) need.add(p.U[i]); });
+  for (const k of [...unis.keys()]) if (!need.has(k)) unis.delete(k);
+  need.forEach(u => { if (!unis.has(u)) unis.set(u, new Uint8Array(512)); });
+  if (c.blackout) return;
+  const B = audio.bands, now = performance.now();
+  const strobePh = (((vb * mix.strobeRate) % 1) + 1) % 1;
+  const speed = Math.min(255, Math.round(clock.bpm / 60 * mix.strobeRate / 25 * 255));
+  const avg = (a, b, y0, y1, out) => {                     // media della zona (righe della griglia: y=0 in basso)
+    let r = 0, g = 0, bl = 0, n = 0;
+    for (let y = y0; y < y1; y++) { let o = ((LIGHT_H - 1 - y) * LIGHT_W + a) * 4; for (let x = a; x < b; x++, o += 4) { r += G[o]; g += G[o + 1]; bl += G[o + 2]; n++; } }
+    out[0] = r / n; out[1] = g / n; out[2] = bl / n;
+  };
+  const zc = [0, 0, 0], pc = [0, 0, 0];
+  plans.forEach((p, fi) => {
+    const f = p.f;
+    const ident = lights.identify && lights.identify.id === f.id && now < lights.identify.until;
+    avg(p.zone[0], p.zone[1], p.zone[2], p.zone[3], zc);
+    const zl = (zc[0] * .299 + zc[1] * .587 + zc[2] * .114);
+    const flash = mix.black ? 0 : f.flash === 'beat' ? (phase < .1 ? 255 : 0) : f.flash === 'bass' ? Math.round(B.bass * 255) :
+      f.flash === 'level' ? Math.round(zl) : (mix.strobe && strobePh < .12 ? 255 : 0);
+    let lastPix = -2;
+    for (let i = 0; i < p.U.length; i++) {
+      const t = p.T[i], px = p.X[i];
+      let col = zc;
+      if (px >= 0) { if (px !== lastPix) { const k = px * 4; avg(p.cells[k], p.cells[k + 1], p.cells[k + 2], p.cells[k + 3], pc); lastPix = px; } col = pc; }
+      let r = col[0] * f.dim, g = col[1] * f.dim, b = col[2] * f.dim, w = 0;
+      if (ident) { r = g = b = (Math.floor(now / 250) & 1) ? 255 : 0; }
+      if (p.W[i]) { w = Math.min(r, g, b); r -= w; g -= w; b -= w; }
+      let v;
+      switch (t) {
+        case 1: v = r; break; case 2: v = g; break; case 3: v = b; break; case 4: v = w; break;
+        case 5: v = 255 - r; break; case 6: v = 255 - g; break; case 7: v = 255 - b; break;
+        case 8: v = mix.black ? 0 : 255 * f.dim; break; case 9: v = zl; break;
+        case 10: v = ident ? 255 : flash; break; case 11: v = mix.strobe ? speed : 0; break;
+        default: v = t < 0 ? -t - 1 : 0;
+      }
+      const buf = unis.get(p.U[i]), a = p.A[i], vv = v < 0 ? 0 : v > 255 ? 255 : Math.round(v);
+      if (vv > buf[a]) buf[a] = vv;                         // HTP
+    }
+  });
+}
+
+/* --- invio --- */
+function lightsSend() {
+  const c = lights.cfg;
+  if (lights.wsOk && c.proto !== 'none' && lights.ws.bufferedAmount < 1 << 20) {
+    const code = c.proto === 'sacn' ? 2 : 1, list = [...lights.unis.entries()];
+    if (list.length) {
+      const out = new Uint8Array(list.length * 517); let o = 0;
+      for (const [u, b] of list) { out[o] = code; out[o + 1] = u >> 8; out[o + 2] = u & 255; out[o + 3] = 2; out[o + 4] = 0; out.set(b, o + 5); o += 517; }
+      lights.ws.send(out); lights.sent += list.length;
+    }
+  }
+  if (lights.writer && !lights.usbBusy) {
+    const b = lights.unis.get(c.usbUni) || new Uint8Array(512);
+    lights.usbBusy = true;
+    ltUsbWrite(b).then(() => { lights.usbFrames++; }).catch(e => { toast('DMX USB: ' + e.message, 5000); ltUsbClose(); }).finally(() => { lights.usbBusy = false; });
+  }
+}
+function ltBridgeUrl() {
+  return (location.protocol.startsWith('http') && location.port === '17001') ? `ws://${location.host}/dmx` : 'ws://127.0.0.1:17001/dmx';
+}
+function ltBridgeCfg() {
+  if (!lights.wsOk) return;
+  const c = lights.cfg;
+  lights.ws.send(JSON.stringify({ type: 'cfg', artnetIp: c.proto === 'artnet' ? (c.ip || '127.0.0.1') : '', sacnIp: c.proto === 'sacn' ? c.ip : '', oscHost: c.oscHost, oscPort: c.oscPort }));
+}
+function ltBridgeConnect(manual) {
+  if (lights.ws) { if (manual) { lights.ws.onclose = null; lights.ws.close(); lights.ws = null; lights.wsOk = false; ltStatus(); } return; }
+  let ws;
+  try { ws = new WebSocket(ltBridgeUrl()); } catch (e) { if (manual) toast('Bridge non raggiungibile: ' + e.message, 5000); return; }
+  ws.binaryType = 'arraybuffer'; lights.ws = ws;
+  ws.onopen = () => { lights.wsOk = true; ltBridgeCfg(); ltStatus(); if (manual) toast('Bridge collegato: uscita luci pronta'); };
+  ws.onmessage = e => { try { const m = JSON.parse(e.data); if (m.type === 'stats') { lights.wsStats = m; ltStatus(); } } catch (err) {} };
+  ws.onclose = () => {
+    const was = lights.wsOk; lights.ws = null; lights.wsOk = false; ltStatus();
+    if (manual && !was) toast('Bridge non trovato: avvia "node bridge.js" nella cartella di MBVX.', 7000);
+    if (lights.cfg.on && lights.cfg.proto !== 'none') { clearTimeout(lights.wsRetry); lights.wsRetry = setTimeout(() => ltBridgeConnect(false), 2000); }
+  };
+  ws.onerror = () => {};
+}
+
+/* --- DMX USB via Web Serial --- */
+async function ltUsbConnect() {
+  if (lights.port) { await ltUsbClose(); toast('DMX USB scollegato'); return; }
+  if (!navigator.serial) { toast('Questo browser non ha Web Serial: usa Chrome o Edge (non Safari, non Firefox).', 6000); return; }
+  try {
+    const port = await navigator.serial.requestPort();
+    const open = lights.cfg.usbMode === 'open';
+    await port.open(open ? { baudRate: 250000, dataBits: 8, stopBits: 2, parity: 'none' } : { baudRate: 57600 });
+    lights.port = port; lights.writer = port.writable.getWriter();
+    toast('DMX USB collegato (' + (open ? 'Open DMX' : 'DMX USB Pro') + ', universo ' + lights.cfg.usbUni + ')');
+  } catch (e) { if (e.name !== 'NotFoundError') toast('DMX USB: ' + e.message, 6000); await ltUsbClose(); }
+  ltStatus();
+}
+async function ltUsbWrite(b) {
+  if (lights.cfg.usbMode === 'open') {                     // DMX512 grezzo: break, poi start code 0 e 512 canali a 250 kbit/s
+    await lights.port.setSignals({ break: true }); await new Promise(r => setTimeout(r, 1)); await lights.port.setSignals({ break: false });
+    const f = new Uint8Array(513); f.set(b, 1); await lights.writer.write(f);
+  } else {                                                // Enttec DMX USB Pro: 0x7E, label 6, lunghezza (LSB, MSB), start code, 512 canali, 0xE7
+    const f = new Uint8Array(518); f[0] = 0x7e; f[1] = 6; f[2] = 513 & 255; f[3] = 513 >> 8; f[4] = 0; f.set(b, 5); f[517] = 0xe7;
+    await lights.writer.write(f);
+  }
+}
+async function ltUsbClose() {
+  try { if (lights.writer) { lights.writer.releaseLock(); } } catch (e) {}
+  try { if (lights.port) await lights.port.close(); } catch (e) {}
+  lights.writer = null; lights.port = null; lights.usbBusy = false; ltStatus();
+}
+
+/* --- QLC+ Web API (ws://IP:9999/qlcplusWS): "ID|valore" muove un widget della Virtual Console --- */
+function ltQlcConnect() {
+  if (lights.qlcWs) { lights.qlcWs.onclose = null; lights.qlcWs.close(); lights.qlcWs = null; lights.qlcOk = false; ltStatus(); toast('QLC+ scollegato'); return; }
+  let ws; try { ws = new WebSocket(lights.cfg.qlcUrl); } catch (e) { toast('QLC+: ' + e.message, 5000); return; }
+  lights.qlcWs = ws;
+  ws.onopen = () => { lights.qlcOk = true; lights.qlcLast = {}; ltStatus(); toast('QLC+ collegato'); };
+  ws.onclose = () => { const was = lights.qlcOk; lights.qlcWs = null; lights.qlcOk = false; ltStatus(); toast(was ? 'QLC+ scollegato' : 'QLC+ non risponde: avvialo con l\'interfaccia web (-w) e controlla l\'indirizzo.', 6000); };
+  ws.onerror = () => {};
+}
+function ltQlcSet(id, v) {
+  if (!lights.qlcOk || id === '' || id == null) return;
+  if (lights.qlcLast[id] === v) return; lights.qlcLast[id] = v;
+  try { lights.qlcWs.send(id + '|' + v); } catch (e) {}
+}
+function lightsQlc(vb) {
+  if (!lights.qlcOk) return;
+  const q = lights.cfg.qlc, beat = Math.floor(vb);
+  if (q.beat !== '' && beat !== lights.qlcBeat) { lights.qlcBeat = beat; lights.qlcLast[q.beat] = -1; ltQlcSet(q.beat, 255); setTimeout(() => ltQlcSet(q.beat, 0), 70); }
+  if (q.strobe !== '') ltQlcSet(q.strobe, mix.strobe && !mix.black ? 255 : 0);
+  const now = performance.now();
+  if (now - lights.qlcT > 50) {
+    lights.qlcT = now; const B = audio.bands;
+    if (q.level !== '') ltQlcSet(q.level, Math.round((audio.running ? B.level : 0) * 255));
+    if (q.bass !== '') ltQlcSet(q.bass, Math.round(B.bass * 255));
+  }
+}
+function lightsOscTick(vb) {
+  const c = lights.cfg;
+  if (!c.osc || !lights.wsOk) return;
+  const msgs = [], beat = Math.floor(vb), now = performance.now(), B = audio.bands;
+  if (beat !== lights.oscBeat) { lights.oscBeat = beat; msgs.push(['/mbvx/beat', 'i', beat], ['/mbvx/bar', 'i', (((beat % 4) + 4) % 4) + 1]); }
+  if (mix.strobe !== lights.oscStrobe) { lights.oscStrobe = mix.strobe; msgs.push(['/mbvx/strobe', 'i', mix.strobe ? 1 : 0]); }
+  if (now - lights.oscT > 40) {
+    lights.oscT = now;
+    msgs.push(['/mbvx/bpm', 'f', clock.bpm], ['/mbvx/level', 'f', audio.running ? B.level : 0], ['/mbvx/bass', 'f', B.bass], ['/mbvx/mid', 'f', B.mid], ['/mbvx/high', 'f', B.high]);
+  }
+  if (msgs.length && lights.ws.bufferedAmount < 1 << 18) lights.ws.send(JSON.stringify({ type: 'osc', msgs }));
+}
+
+/* --- interfaccia --- */
+function ltStatus() {
+  const el = $('#ltStatus'); if (!el || !lights.cfg) return;
+  const c = lights.cfg, plans = ltPlan();
+  const ch = plans.reduce((n, p) => n + p.count, 0), unis = new Set(); plans.forEach(p => p.U.forEach(u => unis.add(u)));
+  const L = [];
+  L.push((c.on ? '<span class="ok">● Invio attivo</span>' : '○ Invio spento') + ` · ${c.fixtures.length} apparecchi · ${ch} canali · ${unis.size} universi`);
+  const st = lights.wsStats;
+  L.push('Bridge: ' + (lights.wsOk ? `<span class="ok">collegato</span>${st ? ` · ${st.pps} pacchetti/s · ${st.kbps} kB/s${st.err ? ' · <span class="bad">' + st.err + '</span>' : ''}` : ''}` : c.on && c.proto !== 'none' ? '<span class="bad">non collegato</span>' : 'non collegato'));
+  L.push('DMX USB: ' + (lights.writer ? `<span class="ok">collegato</span> · universo ${c.usbUni}` : 'non collegato') + ' · QLC+: ' + (lights.qlcOk ? '<span class="ok">collegato</span>' : 'non collegato'));
+  el.innerHTML = L.join('\n');
+  $('#lightsBtn').classList.toggle('on', c.on && (lights.wsOk || !!lights.writer));
+  $('#ltBridge').textContent = lights.ws ? 'Scollega bridge' : 'Collega bridge'; $('#ltUsb').textContent = lights.port ? 'Scollega' : 'Collega'; $('#ltQlc').textContent = lights.qlcWs ? 'Scollega' : 'Collega';
+}
+function ltFixInfo(p) {
+  if (!p.count) return { t: 'Nessun canale: scrivi i canali (es. [R G B])', warn: true };
+  const f = p.f, s = `U${f.universe}.${f.address}`, e = `U${p.end.u}.${p.end.a}`;
+  return { t: `${p.count} canali · ${p.nPix ? p.nPix + ' pixel · ' : ''}${s} → ${e}`, warn: false };
+}
+function ltOverlaps() {
+  const plans = ltPlan(), used = new Map(), bad = new Set();
+  plans.forEach((p, i) => { for (let k = 0; k < p.U.length; k++) { const key = p.U[k] * 512 + p.A[k]; if (used.has(key) && used.get(key) !== i) { bad.add(i); bad.add(used.get(key)); } else used.set(key, i); } });
+  return bad;
+}
+function ltRenderList() {
+  const list = $('#ltList'); if (!list) return;
+  const plans = ltPlan(), bad = ltOverlaps();
+  list.innerHTML = '';
+  lights.cfg.fixtures.forEach((f, i) => {
+    const p = plans[i], info = ltFixInfo(p), hasF = /\bF\b/i.test(f.ch);
+    const card = document.createElement('div'); card.className = 'fx-card' + (i === lights.sel ? ' sel' : ''); card.dataset.i = i;
+    card.innerHTML = `<div class="fx-top"><span class="idx">${i + 1}</span><input type="text" data-k="name" value="${f.name.replace(/"/g, '&quot;')}">
+      <button data-act="id" title="Fa lampeggiare in bianco questo apparecchio per 3 secondi">Identifica</button><button data-act="dup" title="Duplica">⧉</button><button data-act="del" title="Elimina">✕</button></div>
+      <div class="lt-grid">
+        <label>X % <input type="number" data-k="x" data-pct step="0.5" min="0" max="100" value="${+(f.x * 100).toFixed(2)}"></label>
+        <label>Y % <input type="number" data-k="y" data-pct step="0.5" min="0" max="100" value="${+(f.y * 100).toFixed(2)}"></label>
+        <label>Larghezza % <input type="number" data-k="w" data-pct step="0.5" min="0.5" max="100" value="${+(f.w * 100).toFixed(2)}"></label>
+        <label>Altezza % <input type="number" data-k="h" data-pct step="0.5" min="0.5" max="100" value="${+(f.h * 100).toFixed(2)}"></label>
+        <label>Colonne <input type="number" data-k="cols" min="1" max="512" value="${f.cols}"></label>
+        <label>Righe <input type="number" data-k="rows" min="1" max="512" value="${f.rows}"></label>
+        <label>Universo <input type="number" data-k="universe" min="0" max="63999" value="${f.universe}"></label>
+        <label>Indirizzo <input type="number" data-k="address" min="1" max="512" value="${f.address}"></label>
+        <label class="span4">Canali <input type="text" data-k="ch" value="${f.ch.replace(/"/g, '&quot;')}" spellcheck="false"></label>
+        <label>Luminosità % <input type="number" data-k="dim" data-pct min="0" max="100" value="${Math.round(f.dim * 100)}"></label>
+        ${hasF ? `<label class="span2">Lampo (F) <select data-k="flash"><option value="strobe">Strobo di MBVX</option><option value="beat">Ogni beat</option><option value="bass">Bassi</option><option value="level">Luminosità zona</option></select></label>` : '<span class="span2"></span>'}
+        <span></span>
+        <label class="chk span2"><input type="checkbox" data-k="whole" ${f.whole ? 'checked' : ''}> Pixel interi per universo</label>
+        <label class="chk"><input type="checkbox" data-k="serp" ${f.serp ? 'checked' : ''}> Serpentina</label>
+        <label class="chk"><input type="checkbox" data-k="vert" ${f.vert ? 'checked' : ''}> Per colonne</label>
+        <label class="chk"><input type="checkbox" data-k="flipX" ${f.flipX ? 'checked' : ''}> Inverti X</label>
+        <label class="chk"><input type="checkbox" data-k="flipY" ${f.flipY ? 'checked' : ''}> Inverti Y</label>
+      </div>
+      <div class="fx-info${info.warn || bad.has(i) ? ' warn' : ''}">${info.t}${bad.has(i) ? ' · ⚠ canali sovrapposti a un altro apparecchio' : ''}</div>`;
+    const fl = card.querySelector('select[data-k="flash"]'); if (fl) fl.value = f.flash;
+    list.appendChild(card);
+  });
+}
+function ltRenderOverlay() {
+  const ov = $('#lightsOverlay'); if (!ov) return;
+  ov.innerHTML = '';
+  lights.cfg.fixtures.forEach((f, i) => {
+    const d = document.createElement('div'); d.className = 'lz' + (i === lights.sel ? ' sel' : ''); d.dataset.i = i;
+    ltPlaceZone(d, f);
+    d.innerHTML = `${i + 1} · ${f.name.replace(/</g, '&lt;')}<br>U${f.universe}.${f.address}<span class="lz-h"></span>`;
+    ov.appendChild(d);
+  });
+}
+function ltPlaceZone(d, f) {
+  d.style.left = f.x * 100 + '%'; d.style.top = f.y * 100 + '%'; d.style.width = f.w * 100 + '%'; d.style.height = f.h * 100 + '%';
+  const n = f.cols * f.rows;
+  d.style.backgroundImage = n > 1 && n <= 4096 && /\[/.test(f.ch)
+    ? `linear-gradient(to right, rgba(255,255,255,.25) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.25) 1px, transparent 1px)` : 'none';
+  d.style.backgroundSize = `${100 / f.cols}% ${100 / f.rows}%`;
+}
+function ltChanged(rerenderList) { lights.planKey = ''; ltSave(); ltRenderOverlay(); if (rerenderList) ltRenderList(); else ltRefreshInfo(); ltStatus(); }
+function ltRefreshInfo() {
+  const plans = ltPlan(), bad = ltOverlaps();
+  $$('#ltList .fx-card').forEach(card => { const i = +card.dataset.i, p = plans[i]; if (!p) return; const info = ltFixInfo(p), el = card.querySelector('.fx-info');
+    el.textContent = info.t + (bad.has(i) ? ' · ⚠ canali sovrapposti a un altro apparecchio' : ''); el.classList.toggle('warn', info.warn || bad.has(i)); });
+}
+function ltSelect(i) { lights.sel = i; $$('#ltList .fx-card').forEach(c => c.classList.toggle('sel', +c.dataset.i === i)); $$('#lightsOverlay .lz').forEach(z => z.classList.toggle('sel', +z.dataset.i === i)); }
+function ltAdd(type) {
+  const t = LT_TYPES[type], fx = lights.cfg.fixtures;
+  // il nuovo apparecchio parte dal primo canale libero
+  let u = 1, a = 1; const plans = ltPlan();
+  plans.forEach(p => { if (p.end && (p.end.u > u || (p.end.u === u && p.end.a + 1 > a))) { u = p.end.u; a = p.end.a + 1; } });
+  if (a > 512) { u++; a = 1; }
+  const f = ltClean(Object.assign({}, t, { type, universe: u, address: a, name: t.name + ' ' + (fx.filter(x => x.type === type).length + 1) }));
+  fx.push(f); lights.sel = fx.length - 1; ltChanged(true);
+}
+function ltSyncUi() {
+  const c = lights.cfg;
+  const v = (id, val) => { const el = $(id); if (el.type === 'checkbox') el.checked = !!val; else el.value = val; };
+  v('#ltOn', c.on); v('#ltFps', String(c.fps)); v('#ltBlack', c.blackout); v('#ltProto', c.proto); v('#ltIp', c.ip); v('#ltUsbMode', c.usbMode); v('#ltUsbUni', c.usbUni);
+  v('#ltQlcUrl', c.qlcUrl); v('#ltQlcBeat', c.qlc.beat); v('#ltQlcStrobe', c.qlc.strobe); v('#ltQlcLevel', c.qlc.level); v('#ltQlcBass', c.qlc.bass);
+  v('#ltOsc', c.osc); v('#ltOscHost', c.oscHost); v('#ltOscPort', c.oscPort);
+}
+function ltBindUi() {
+  const C = () => lights.cfg;
+  $('#lightsBtn').onclick = () => { document.body.classList.toggle('lights-open'); if (document.body.classList.contains('lights-open')) { ltRenderList(); ltStatus(); } };
+  $('#ltClose').onclick = () => { document.body.classList.remove('lights-open'); };
+  $('#ltOn').onchange = e => { C().on = e.target.checked; ltSave(); if (C().on && C().proto !== 'none' && !lights.ws) ltBridgeConnect(false); ltStatus(); };
+  $('#ltFps').onchange = e => { C().fps = +e.target.value; ltSave(); };
+  $('#ltBlack').onchange = e => { C().blackout = e.target.checked; ltSave(); };
+  $('#ltEdit').onchange = e => { document.body.classList.toggle('lights-edit', e.target.checked); ltRenderOverlay(); };
+  $('#ltProto').onchange = e => { C().proto = e.target.value; if (C().proto === 'sacn' && C().ip === '127.0.0.1') { C().ip = ''; $('#ltIp').value = ''; } ltSave(); ltBridgeCfg(); };
+  $('#ltIp').onchange = e => { C().ip = e.target.value.trim(); ltSave(); ltBridgeCfg(); };
+  $('#ltBridge').onclick = () => ltBridgeConnect(true);
+  $('#ltUsbMode').onchange = e => { C().usbMode = e.target.value; ltSave(); if (lights.port) toast('Ricollega il DMX USB per usare la nuova modalità'); };
+  $('#ltUsbUni').onchange = e => { C().usbUni = Math.max(0, +e.target.value | 0); ltSave(); ltStatus(); };
+  $('#ltUsb').onclick = () => ltUsbConnect();
+  $('#ltQlcUrl').onchange = e => { C().qlcUrl = e.target.value.trim(); ltSave(); };
+  $('#ltQlc').onclick = () => ltQlcConnect();
+  [['#ltQlcBeat', 'beat'], ['#ltQlcStrobe', 'strobe'], ['#ltQlcLevel', 'level'], ['#ltQlcBass', 'bass']].forEach(([id, k]) => {
+    $(id).onchange = e => { C().qlc[k] = e.target.value === '' ? '' : String(Math.max(0, +e.target.value | 0)); lights.qlcLast = {}; ltSave(); };
+  });
+  $('#ltOsc').onchange = e => { C().osc = e.target.checked; ltSave(); if (C().osc && !lights.ws) ltBridgeConnect(false); };
+  $('#ltOscHost').onchange = e => { C().oscHost = e.target.value.trim() || '127.0.0.1'; ltSave(); ltBridgeCfg(); };
+  $('#ltOscPort').onchange = e => { C().oscPort = Math.max(1, Math.min(65535, +e.target.value | 0)); ltSave(); ltBridgeCfg(); };
+  $$('#lightsDrawer [data-add]').forEach(b => b.onclick = () => ltAdd(b.dataset.add));
+  const list = $('#ltList');
+  list.addEventListener('focusin', e => { const card = e.target.closest('.fx-card'); if (card) ltSelect(+card.dataset.i); });
+  list.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]'); const card = e.target.closest('.fx-card'); if (!card) return;
+    const i = +card.dataset.i; ltSelect(i); if (!b) return;
+    const fx = lights.cfg.fixtures;
+    if (b.dataset.act === 'del') { fx.splice(i, 1); lights.sel = -1; ltChanged(true); }
+    else if (b.dataset.act === 'dup') { const n = ltClean(Object.assign({}, fx[i], { id: null, name: fx[i].name + ' copia' })); const p = ltPlan()[i]; if (p.end) { n.universe = p.end.a >= 512 ? p.end.u + 1 : p.end.u; n.address = p.end.a >= 512 ? 1 : p.end.a + 1; } fx.splice(i + 1, 0, n); lights.sel = i + 1; ltChanged(true); }
+    else if (b.dataset.act === 'id') { lights.identify = { id: fx[i].id, until: performance.now() + 3000 }; }
+  });
+  list.addEventListener('change', e => {
+    const el = e.target, k = el.dataset.k, card = el.closest('.fx-card'); if (!k || !card) return;
+    const f = lights.cfg.fixtures[+card.dataset.i];
+    let val = el.type === 'checkbox' ? el.checked : el.value;
+    if (el.type === 'number') val = el.hasAttribute('data-pct') ? +val / 100 : +val;
+    const cleaned = ltClean(Object.assign({}, f, { [k]: val }));
+    Object.assign(f, cleaned);
+    if (f.x + f.w > 1) f.w = Math.max(.005, 1 - f.x); if (f.y + f.h > 1) f.h = Math.max(.005, 1 - f.y);
+    ltChanged(k === 'ch');
+  });
+  // zone trascinabili sullo schermo
+  const ov = $('#lightsOverlay');
+  ov.addEventListener('pointerdown', e => {
+    const z = e.target.closest('.lz'); if (!z) return;
+    e.preventDefault(); e.stopPropagation();
+    const i = +z.dataset.i, f = lights.cfg.fixtures[i], R = ov.getBoundingClientRect();
+    ltSelect(i);
+    const resize = e.target.classList.contains('lz-h'), sx = e.clientX, sy = e.clientY, f0 = { x: f.x, y: f.y, w: f.w, h: f.h };
+    z.setPointerCapture(e.pointerId);
+    const move = ev => {
+      const dx = (ev.clientX - sx) / R.width, dy = (ev.clientY - sy) / R.height;
+      if (resize) { f.w = Math.min(1 - f.x, Math.max(.005, f0.w + dx)); f.h = Math.min(1 - f.y, Math.max(.005, f0.h + dy)); }
+      else { f.x = Math.min(1 - f.w, Math.max(0, f0.x + dx)); f.y = Math.min(1 - f.h, Math.max(0, f0.y + dy)); }
+      ltPlaceZone(z, f);
+    };
+    const up = () => { z.removeEventListener('pointermove', move); z.removeEventListener('pointerup', up); z.removeEventListener('pointercancel', up); ltChanged(true); };
+    z.addEventListener('pointermove', move); z.addEventListener('pointerup', up); z.addEventListener('pointercancel', up);
+  });
+  ov.addEventListener('dblclick', e => e.stopPropagation());
+  $('#ltCopy').onclick = () => { const t = JSON.stringify({ app: 'MBVX-luci', v: 1, ...lights.cfg }, null, 2); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('Patch copiata negli appunti'), () => toast('Copia non consentita dal browser: usa "Salva patch…"')); };
+  $('#ltSaveP').onclick = () => {
+    const blob = new Blob([JSON.stringify({ app: 'MBVX-luci', v: 1, ...lights.cfg }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mbvx-luci.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  $('#ltLoadP').onclick = () => $('#ltLoadFile').click();
+  $('#ltLoadFile').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    f.text().then(t => { const j = JSON.parse(t); if (!j || !Array.isArray(j.fixtures)) throw new Error('non è una patch luci'); ltApply(j); toast('Patch luci caricata: ' + j.fixtures.length + ' apparecchi'); }).catch(err => toast('Patch non valida: ' + err.message, 6000)); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('lights-open') && !learning) document.body.classList.remove('lights-open'); });
+}
+function ltApply(j) {
+  const keepOn = lights.cfg && lights.cfg.on;
+  ltLoad(j); if (keepOn != null && j.on == null) lights.cfg.on = keepOn;
+  ltSave(); ltSyncUi(); ltRenderList(); ltRenderOverlay(); ltStatus();
+  if (lights.cfg.on && lights.cfg.proto !== 'none' && !lights.ws) ltBridgeConnect(false);
+}
+function lightsInit() {
+  ltLoad(LS.get('lights', null));
+  ltSyncUi(); ltBindUi(); ltRenderOverlay(); ltStatus();
+  if (lights.cfg.on && (lights.cfg.proto !== 'none' || lights.cfg.osc)) ltBridgeConnect(false);
+  setInterval(() => { if (document.body.classList.contains('lights-open')) ltStatus(); }, 1000);
 }
 
 /* ---------- Palette ---------- */
@@ -2498,6 +3079,7 @@ function bindTop() {
   bindRange('hue', v => mix.hue = v, v => Math.round(v) + '°');
   bindRange('zoom', v => mix.zoom = v);
   bindRange('kaleido', v => mix.kaleido = v, v => v < 2 ? 'off' : v + ' spicchi');
+  $('#kalGrid').addEventListener('change', e => { mix.kalGrid = +e.target.value; });
   bindRange('master', v => mix.master = v);
   bindRange('logoSize', v => mix.logoSize = v, v => Math.round(v * 100) + '%');
   bindRange('logoAlpha', v => mix.logoAlpha = v);
@@ -2703,12 +3285,13 @@ function snapshot() {
     decks: decks.map(d => ({ preset: d.preset, code: d.code !== PRESETS[d.preset] ? d.code : null, speed: d.speed, react: d.react, p1: d.p1, p2: d.p2, rot: d.rot, spin: d.spin, spinTempo: d.spinTempo })),
     mix: {
       xf: mix.xf, mode: mix.mode, feedback: mix.feedback, hue: mix.hue, zoom: mix.zoom,
-      kaleido: mix.kaleido, strobeRate: mix.strobeRate, master: mix.master, mirror: mix.mirror,
+      kaleido: mix.kaleido, kalGrid: mix.kalGrid, strobeRate: mix.strobeRate, master: mix.master, mirror: mix.mirror,
       palette: mix.palette,
       palC1: mix.palC1, palC2: mix.palC2, palC3: mix.palC3,
       logoSize: mix.logoSize, logoAlpha: mix.logoAlpha, logoPulse: mix.logoPulse, logoX: mix.logoX, logoY: mix.logoY
     },
     logo: logo.dataUrl ? { name: logo.name, data: logo.dataUrl } : null,
+    lights: lights.cfg,
     clock: { offsetMs: clock.offsetMs, foldLo: clock.foldLo },
     xfTime, qual: quality.mode,
     res: $('#resSel').value, midi: midiMap
@@ -2730,6 +3313,7 @@ function applySet(s) {
   const m = s.mix || {};
   setRange('xf', m.xf); setRange('feedback', m.feedback); setRange('hue', m.hue); setRange('zoom', m.zoom);
   setRange('kaleido', m.kaleido); setRange('master', m.master);
+  if (m.kalGrid != null && $(`#kalGrid option[value="${m.kalGrid}"]`)) { $('#kalGrid').value = m.kalGrid; mix.kalGrid = +m.kalGrid; }
   if (m.mode != null) { $('#mode').value = m.mode; mix.mode = +m.mode; }
   if (m.strobeRate != null) { $('#strobeRate').value = m.strobeRate; mix.strobeRate = +m.strobeRate; }
   if (m.palC1) { mix.palC1 = m.palC1; $('#palC1').value = m.palC1; }
@@ -2738,6 +3322,7 @@ function applySet(s) {
   if (m.palette != null) setPalette(+m.palette);
   ['logoSize', 'logoAlpha', 'logoPulse', 'logoX', 'logoY'].forEach(k => { if (m[k] != null) setRange(k, m[k]); });
   if (s.logo && s.logo.data) restoreLogo(s.logo.data, s.logo.name);
+  if (s.lights && Array.isArray(s.lights.fixtures)) ltApply(s.lights);
   mix.mirror = !!m.mirror;
   if (s.xfTime != null) setRange('xfTime', s.xfTime);
   if (s.qual && $(`#qualSel option[value="${s.qual}"]`)) setQualityMode(s.qual);
@@ -2811,6 +3396,7 @@ $$('input[type=range]:not([data-noreset])').forEach(el => {
   window.addEventListener('blur', hide);
 })();
 bindPalette();
+lightsInit();
 setResolution(1280, 720);
 decks.forEach(d => loadPreset(d, d.preset));
 const saved = LS.get('state', null);

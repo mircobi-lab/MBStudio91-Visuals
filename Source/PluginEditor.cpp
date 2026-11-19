@@ -1,6 +1,7 @@
 #include "PluginEditor.h"
 #include "StageComponent.h"
 #include "ShaderEditorWindow.h"
+#include "LightsWindow.h"
 
 using namespace mbv;
 
@@ -111,6 +112,9 @@ MBVisualsEditor::MBVisualsEditor (MBVisualsProcessor& p) : AudioProcessorEditor 
     projBtn.setTooltip ("Apre/chiude l'uscita a schermo intero sullo schermo scelto (F, o doppio clic sull'immagine). Esc per chiudere");
     projBtn.onClick = [this] { proc.showProjector (proc.projectorOpen() ? -1 : juce::jmax (0, displayBox.getSelectedId() - 1)); };
     addAndMakeVisible (projBtn);
+    lightsBtn.setTooltip ("Uscita luci: LED wall, barre, fari e strobo via Art-Net / sACN, OSC per QLC+");
+    lightsBtn.onClick = [this] { showLights(); };
+    addAndMakeVisible (lightsBtn);
     resBox.addItemList ({ "Deck 960x540", "Deck 1280x720", "Deck 1920x1080" }, 1);
     resBox.setSelectedId (proc.outW >= 1900 ? 3 : proc.outW >= 1200 ? 2 : 1, juce::dontSendNotification);
     resBox.setTooltip (juce::String::fromUTF8 ("Risoluzione interna dei deck (la Qualità automatica la riduce quando serve). L'uscita è sempre alla risoluzione dello schermo"));
@@ -162,6 +166,8 @@ MBVisualsEditor::MBVisualsEditor (MBVisualsProcessor& p) : AudioProcessorEditor 
     makeCombo (palBox, palAtt, ids::palette, paletteNames()); label (palL, "Palette (P)", 10.f, kDim);
     makeCombo (strobeBox, strobeAtt, ids::strobeRate, strobeNames()); label (strobeL, "Strobo", 10.f, kDim);
     makeCombo (qualBox, qualAtt, ids::quality, qualityNames()); label (qualL, juce::String::fromUTF8 ("Qualità"), 10.f, kDim);
+    makeCombo (kalGridBox, kalGridAtt, ids::kalGrid, kalGridNames()); label (kalGridL, "Caleidoscopi", 10.f, kDim);
+    kalGridBox.setTooltip ("Quanti caleidoscopi affiancati: 1, 2 (2x1), 4 (2x2), 8 (4x2), celle vicine specchiate. Gli spicchi si scelgono con Caleido");
     qualBox.setTooltip (juce::String::fromUTF8 ("Auto: la risoluzione dei deck scende da sola se gli fps calano, e risale quando può"));
     label (colL, "Colori: Pantone 1-2-3 e Monocolore", 10.f, kDim);
     for (int i = 0; i < 4; ++i)
@@ -178,11 +184,13 @@ MBVisualsEditor::MBVisualsEditor (MBVisualsProcessor& p) : AudioProcessorEditor 
 
     takeStage();
     startTimerHz (30);
+
 }
 
 MBVisualsEditor::~MBVisualsEditor()
 {
     shaderWin.reset();
+    lightsWin.reset();
     if (stageHere) { proc.renderer.detach(); stageHolder.removeChildComponent (&proc.stage()); }
     setLookAndFeel (nullptr);
 }
@@ -271,6 +279,14 @@ void MBVisualsEditor::setupDeck (int i)
 }
 
 //==============================================================================
+void MBVisualsEditor::showLights()
+{
+    if (lightsWin == nullptr) lightsWin = std::make_unique<LightsWindow> (proc.lights);
+    else lightsWin->refreshFromEngine();
+    lightsWin->setVisible (true);
+    lightsWin->toFront (true);
+}
+
 void MBVisualsEditor::takeStage()
 {
     if (stageHere || proc.projectorOpen()) { stageAway.setVisible (proc.projectorOpen()); return; }
@@ -409,6 +425,7 @@ void MBVisualsEditor::resized()
     learnBtn.setBounds (row2.removeFromRight (96).reduced (0, 3)); row2.removeFromRight (12);
     resBox.setBounds (row2.removeFromRight (140).reduced (0, 3)); row2.removeFromRight (4);
     projBtn.setBounds (row2.removeFromRight (130).reduced (0, 3)); row2.removeFromRight (4);
+    lightsBtn.setBounds (row2.removeFromRight (80).reduced (0, 3)); row2.removeFromRight (8);
     displayBox.setBounds (row2.removeFromRight (210).reduced (0, 3));
     r.removeFromTop (6);
     auto panels = r.removeFromBottom (300);
@@ -436,7 +453,7 @@ void MBVisualsEditor::resized()
     comboRow (palL, palBox, c2.removeFromTop (rh)); knobRow (pixel, c2.removeFromTop (rh));
     colL.setBounds (c2.removeFromTop (12)); { auto cr = c2.removeFromTop (26); const int bw = cr.getWidth() / 4; for (int i = 0; i < 4; ++i) colBtn[i].setBounds (cr.removeFromLeft (bw).reduced (2, 1)); }
     knobRow (master, c2.removeFromTop (rh)); knobRow (reactG, c2.removeFromTop (rh)); knobRow (beatOffset, c2.removeFromTop (rh));
-    comboRow (strobeL, strobeBox, c3.removeFromTop (rh)); comboRow (qualL, qualBox, c3.removeFromTop (rh));
+    comboRow (kalGridL, kalGridBox, c3.removeFromTop (rh)); comboRow (strobeL, strobeBox, c3.removeFromTop (rh)); comboRow (qualL, qualBox, c3.removeFromTop (rh));
     { auto br = c3.removeFromTop (rh); const int bw = br.getWidth() / 2; strobeBtn.setBounds (br.removeFromLeft (bw).reduced (2, 6)); blackBtn.setBounds (br.reduced (2, 6)); }
     { auto br = c3.removeFromTop (rh); const int bw = br.getWidth() / 2; invertBtn.setBounds (br.removeFromLeft (bw).reduced (2, 6)); mirrorBtn.setBounds (br.reduced (2, 6)); }
     for (int i = 0; i < 4; ++i) colBtn[i].setColour (juce::TextButton::buttonColourId, proc.palColour (i));

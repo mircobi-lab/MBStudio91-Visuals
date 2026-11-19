@@ -2,6 +2,7 @@
 #include <juce_opengl/juce_opengl.h>
 #include "VisualEngine.h"
 #include "ShaderLibrary.h"
+#include "LightsEngine.h"
 
 /*  Rendering OpenGL 3.2 core (GLSL 1.50): due deck su FBO a risoluzione ridotta, mix + palette su un
     buffer "a pixel grossi" (dimensione Pixel), ingrandimento NEAREST a schermo. Tutto gira sul thread GL
@@ -9,7 +10,7 @@
 class Renderer : public juce::OpenGLRenderer
 {
 public:
-    Renderer (juce::AudioProcessorValueTreeState& apvts, VisualEngine& engine);
+    Renderer (juce::AudioProcessorValueTreeState& apvts, VisualEngine& engine, LightsEngine& lights);
     ~Renderer() override;
 
     void newOpenGLContextCreated() override;
@@ -49,10 +50,15 @@ private:
     void setPostUniforms (Program& p, const VisualEngine::Frame& fr, int w, int h);
     void readThumb (int d);
     void ensureSizes();
+    void captureLights (GLuint srcFb, int w, int h);
+    void pollLights (const VisualEngine::Frame& fr);
     float paramF (const juce::String& id) const { if (auto* p = apvts.getRawParameterValue (id)) return p->load(); return 0.f; }
 
     juce::AudioProcessorValueTreeState& apvts;
     VisualEngine& engine;
+    LightsEngine& lights;
+    std::vector<Fbo> lightChain; int lightChainW = 0, lightChainH = 0;
+    GLuint lightPbo = 0; GLsync lightSync = nullptr;
     juce::OpenGLContext ctx;
     juce::Component* attached = nullptr;
 

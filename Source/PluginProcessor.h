@@ -5,6 +5,7 @@
 #include "VisualEngine.h"
 #include "Renderer.h"
 #include "ShaderLibrary.h"
+#include "LightsEngine.h"
 
 class StageComponent;
 class ProjectorWindow;
@@ -41,6 +42,7 @@ public:
     juce::AudioProcessorValueTreeState apvts;
     AudioFeed feed;
     VisualEngine engine;
+    LightsEngine lights;
     Renderer renderer;
     ShaderLibrary library;
 
