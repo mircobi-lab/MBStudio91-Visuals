@@ -15,7 +15,7 @@ function(mbstudio_ui_add target)
             "${dir}/fonts/Antonio-Bold.ttf"
             "${dir}/brand/mbstudio91-logo.png"
             "${dir}/brand/mbstudio91-wordmark.png")
-    target_sources(${target} PRIVATE "${dir}/MBStudioLookAndFeel.cpp")
+    target_sources(${target} PRIVATE "${dir}/MBStudioLookAndFeel.cpp" "${dir}/MBStudioMidi.cpp")
     target_include_directories(${target} PRIVATE "${dir}")
     target_link_libraries(${target} PRIVATE ${target}_MBStudioUIFonts)
 endfunction()
