@@ -13,12 +13,7 @@ def must(old, new, count=1):
     assert s.count(old) >= 1, old[:60]
     s = s.replace(old, new, count)
 
-# ---- icona per la schermata Home (PNG 180x180)
-im = Image.new('RGBA', (180, 180), (6, 7, 9, 255))
-d = ImageDraw.Draw(im)
-d.ellipse((42, 42, 138, 138), outline=(255, 181, 71, 255), width=11)
-d.ellipse((77, 77, 103, 103), fill=(255, 181, 71, 255))
-buf = io.BytesIO(); im.save(buf, 'PNG'); icon = base64.b64encode(buf.getvalue()).decode()
+# ---- icona per la schermata Home: arriva gia' da mbvx.html (icons/mbvx-*), niente da generare
 
 # ---- head
 must('<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
@@ -27,8 +22,7 @@ must('<meta name="viewport" content="width=device-width, initial-scale=1, viewpo
      '<meta name="mobile-web-app-capable" content="yes">\n'
      '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n'
      '<meta name="apple-mobile-web-app-title" content="MBVX">\n'
-     '<meta name="theme-color" content="#060709">\n'
-     f'<link rel="apple-touch-icon" href="data:image/png;base64,{icon}">')
+     '<meta name="theme-color" content="#060709">')
 must('<title>MBVX — Visual Mixer</title>', '<title>MBVX per iPhone</title>')
 must('<span class="brand-sub">visual mixer · djay Pro</span>', '<span class="brand-sub">iPhone</span>')
 must('<button id="fsBtn" title="Schermo intero (F)">Proietta</button>', '<button id="fsBtn" class="live-btn">Live</button>')
