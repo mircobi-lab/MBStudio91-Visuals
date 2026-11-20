@@ -6,6 +6,10 @@ on:
     tags: [ 'v*' ]
   workflow_dispatch:
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   mac:
     name: "macOS universale (Intel + Apple Silicon)"
@@ -70,9 +74,10 @@ jobs:
             build/MBStudio91Visuals_artefacts/Release/VST3/
             build/MBStudio91Visuals_artefacts/Release/Standalone/
 
+  # a ogni aggiornamento di main (e per i tag v*) i file pronti vanno nella pagina Releases
   release:
-    name: "Release (solo per i tag v*)"
-    if: startsWith(github.ref, 'refs/tags/v')
+    name: "Pubblica in Releases"
+    if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
     needs: [mac, windows, linux]
     runs-on: ubuntu-latest
     permissions:
@@ -88,6 +93,16 @@ jobs:
           (cd MBStudio91-Visuals-Linux && zip -r ../MBStudio91-Visuals-Linux.zip .)
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v1.1.{0}', github.run_number) }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          name: ${{ startsWith(github.ref, 'refs/tags/') && format('MBStudio91 Visuals {0}', github.ref_name) || format('MBStudio91 Visuals 1.1.{0}', github.run_number) }}
+          body: |
+            Compilato automaticamente da GitHub dal commit ${{ github.sha }}.
+            - Mac (Apple Silicon e Intel): MBStudio91-Visuals-macOS-VST3.zip, -AU.zip, -Standalone.zip.
+              Dopo la copia: xattr -dr com.apple.quarantine sul plugin e sull'app.
+            - Windows: MBStudio91-Visuals-Windows.zip (cartella VST3 e app).
+            - Linux: MBStudio91-Visuals-Linux.zip.
           files: |
             dist/MBStudio91-Visuals-macOS/*.zip
             dist/MBStudio91-Visuals-Windows.zip
