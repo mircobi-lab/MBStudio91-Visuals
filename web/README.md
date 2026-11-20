@@ -11,6 +11,22 @@
 - `make_iphone.py` — genera `mbvx-iphone.html` da `mbvx.html` e dagli shader in `../Shaders/Presets`:
   `python3 make_iphone.py mbvx.html mbvx-iphone.html ../Shaders/Presets`
 
+## Lab preset (pulsante Lab)
+
+Crea un preset nuovo da una **foto o un video** di un effetto che ti piace e/o da una **descrizione**.
+Il Lab non copia l'immagine: misura simmetria, direzione delle linee, quanti bordi sono dritti, varietà dei colori,
+luce al centro, zone morbide (fumo) e, nei video, il movimento; sceglie un modello (blocchi, fili, barre, anelli,
+celle, onde) con i colori trovati e scrive uno shader nuovo, reattivo all'audio. Le parole della descrizione
+(es. *specchio, raggi, fumo, rosso, diagonale, veloce*) hanno la precedenza sull'analisi.
+
+- **Genera** prova lo shader sul deck; **Varia** ne crea un altro dalla stessa ricetta (seme diverso).
+- **Salva nei miei preset**: compare in fondo all'elenco dei deck (gruppo *I miei preset*), salvato nel browser.
+  Salva il codice del deck dove l'hai provato, quindi anche i ritocchi fatti nell'editor.
+- **Esporta .glsl**: per il plugin, da mettere in `Documenti/MBStudio91 Visuals/Shaders`.
+- **Copia richiesta per Claude**: copia una richiesta già pronta (analisi, colori, regole tecniche e shader di
+  partenza) da incollare in una chat con Claude per avere uno shader più elaborato; il risultato si incolla
+  nell'editor del deck e si salva come sopra.
+
 ## Uso su iPhone
 1. Carica `mbvx-iphone.html` su un sito **https** (Safari concede il microfono solo alle pagine sicure) e aprilo.
 2. *Condividi → Aggiungi alla schermata Home*: si apre come app a schermo intero, lo schermo non si spegne.

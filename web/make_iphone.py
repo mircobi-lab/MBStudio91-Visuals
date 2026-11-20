@@ -54,7 +54,7 @@ body::after{display:none}
 .top .brand .mbs-logo{height:18px}
 .top .brand .mbs-badge{font-size:16px;padding:3px 6px 1px}
 .top .spacer{display:none}
-#linkBtn,#midiBtn,#learnBtn,#outBtn,#lightsBtn,.lights-drawer,#lightsOverlay,#qualSel,#resSel,#half,#dbl,#nudgeL,#nudgeR,.top label.ctl{display:none!important}
+#linkBtn,#midiBtn,#learnBtn,#outBtn,#lightsBtn,#lightsDrawer,#lightsOverlay,#qualSel,#resSel,#half,#dbl,#nudgeL,#nudgeR,.top label.ctl{display:none!important}
 .top button,.top select{min-height:38px;padding:6px 12px;font-size:13px}
 .live-btn{position:relative;padding-left:24px!important}
 .live-btn::before{content:'';position:absolute;left:9px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--led-red);box-shadow:0 0 6px var(--led-red)}

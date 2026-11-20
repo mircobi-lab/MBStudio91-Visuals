@@ -8,7 +8,11 @@ rotazione/spin dei deck a tempo o libero, clock dai BPM della DAW oppure **rilev
 (stesso algoritmo di MBVX: colpi di cassa + istogramma + regressione sulla griglia), tap tempo, MIDI learn,
 finestra **proiettore** a schermo intero su un secondo schermo, editor GLSL integrato.
 
-34 preset: i 27 di MBVX più **7 preset 3D a basso costo** pensati per il bianco e nero / 1-bit / monocolore:
+37 preset: quelli di MBVX più **7 preset 3D a basso costo** pensati per il bianco e nero / 1-bit / monocolore.
+Il vecchio *Neon Grid* (n. 18) è stato tolto e al suo posto c'è **Prismi Specchio**, così i numeri degli altri
+preset (e le automazioni già registrate nella DAW) non cambiano.
+
+
 
 | # | Preset | Tecnica |
 |---|--------|---------|
@@ -19,6 +23,10 @@ finestra **proiettore** a schermo intero su un secondo schermo, editor GLSL inte
 | 32 | 3D Raytracing Sfere | 3 sfere + pavimento a scacchi, ombre nette, un rimbalzo di riflesso, scala di grigi |
 | 33 | 3D Voxel Città | città di cubi alta quanto lo spettro, attraversamento a griglia (DDA) |
 | 34 | 3D Toro Raymarch | toro attorcigliato (raymarching SDF), ombreggiatura grigia con contorno |
+| 18 | Prismi Specchio | corridoio di blocchi a fil di ferro, simmetrico, con fasci di luce dal fondo (Param2 = colore d'accento) |
+| 35 | Fili di Luce | fasci di fili bianchi che scorrono in diagonale e si piegano, qualche anello largo |
+| 36 | Mosaico Barre | colonne di barre arrotondate a colori che scorrono, accese dallo spettro |
+| 37 | Citta dall'Alto | volo sopra una città notturna (DDA con strade), finestre accese dalla musica |
 
 Tutto gira in **OpenGL 3.2 core (GLSL 1.50)** con i deck calcolati a risoluzione ridotta e una qualità
 automatica che scende (100 → 75 → 50 → 35 %) quando gli fps calano: va bene anche su computer poco potenti
@@ -96,7 +104,10 @@ l'intestazione con le uniform (`iTime`, `iBass`, `iBeat`, `iPhase`, `audioSpec()
 `specHist()`, ecc.) è fissa e uguale a quella di MBVX, quindi i preset di MBVX funzionano senza modifiche.
 Ctrl/Cmd+Invio compila; gli errori riportano la riga del tuo codice. *Salva preset...* scrive un `.glsl`
 in `~/Documents/MBStudio91 Visuals/Shaders/`: i file in quella cartella compaiono nell'elenco dei preset
-al prossimo avvio (dopo i 34 integrati).
+al prossimo avvio (dopo i 37 integrati).
+
+Il **Lab** di MBVX (pulsante *Lab*) crea preset nuovi partendo da una foto, un video o una descrizione:
+*Esporta .glsl* scarica il file da mettere in quella cartella e il preset compare anche nel plugin.
 
 ## Caleidoscopi 1 / 2 / 4 / 8
 
